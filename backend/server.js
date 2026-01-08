@@ -1,27 +1,25 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const path = require('path');
-const helmet = require('helmet');
 const xss = require('xss');
 const hpp = require('hpp');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
-
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const helmet = require('helmet');
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: '*' }));
+app.use(cors({ origin: '*' })); 
 app.use(express.json({ limit: '10kb' }));
 app.use(hpp());
 
-const Inquiry = mongoose.model('Inquiry', new mongoose.Schema({
-    email: String,
-    whatsapp: String,
-    pesan: String,
+const InquirySchema = new mongoose.Schema({
+    email: { type: String, required: true },
+    whatsapp: { type: String, required: true },
+    pesan: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
-}));
+});
+const Inquiry = mongoose.models.Inquiry || mongoose.model('Inquiry', InquirySchema);
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -31,36 +29,49 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-app.post('/api/marz/consult', async (req, res) => {
+let isConnected = false;
+const connectDB = async () => {
+    if (isConnected) return;
     try {
-        const email = xss(req.body.email);
-        const whatsapp = xss(req.body.whatsapp);
-        const pesan = xss(req.body.pesan);
+        await mongoose.connect(process.env.MONGODB_URI);
+        isConnected = true;
+    } catch (err) {
+        console.error("MongoDB Connection Error:", err);
+    }
+};
 
-        const newLead = new Inquiry({ email, whatsapp, pesan });
+app.post('/api/marz/consult', async (req, res) => {
+    await connectDB();
+    try {
+        const { email, whatsapp, pesan } = req.body;
+
+        const newLead = new Inquiry({ 
+            email: xss(email), 
+            whatsapp: xss(whatsapp), 
+            pesan: xss(pesan) 
+        });
         await newLead.save();
 
         await transporter.sendMail({
             from: '"MARZ STORE" <noreply@marzstore.com>',
             to: process.env.EMAIL_USER,
-            subject: `INQUIRY KONSULTASI: ${email}`,
+            subject: `KONSULTASI BARU: ${email}`,
             html: `
-                <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee;">
-                    <h2>Detail Masuk</h2>
+                <div style="font-family: sans-serif; border: 1px solid #ddd; padding: 20px;">
+                    <h2>Ada Inquiry Baru Masuk</h2>
                     <p><strong>Email:</strong> ${email}</p>
                     <p><strong>WhatsApp:</strong> ${whatsapp}</p>
                     <p><strong>Pesan:</strong> ${pesan}</p>
+                    <hr>
+                    <p style="font-size: 12px; color: #888;">Data ini sudah tersimpan di Database MongoDB.</p>
                 </div>
             `
         });
 
-        res.status(200).json({ status: "success" });
+        res.status(200).json({ status: "success", message: "Data terkirim" });
     } catch (err) {
-        res.status(500).json({ status: "error", msg: "Gagal memproses permintaan" });
+        res.status(500).json({ status: "error", message: "Gagal memproses data" });
     }
 });
 
-const PORT = process.env.PORT || 3000;
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => app.listen(PORT, () => console.log(`Server running on port ${PORT}`)))
-    .catch(err => console.error("Database connection error:", err));
+module.exports = app;
