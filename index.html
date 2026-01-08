@@ -33,6 +33,7 @@
             100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
         .animate-wa { animation: pulse-green 2s infinite; }
+        .grecaptcha-badge { visibility: hidden !important; }
     </style>
 </head>
 <body class="hero-bg">
@@ -77,11 +78,8 @@
                     <li>- Core SEO Setup</li>
                     <li>- Free Hosting 1 Year</li>
                 </ul>
-                <a href="https://wa.link/tw7tjs" 
-                   target="_blank"
-                   class="block w-full text-center bg-slate-100 py-3 rounded-lg text-[10px] font-bold uppercase hover:bg-slate-200 transition">Pilih Paket</a>
+                <a href="https://wa.link/tw7tjs" target="_blank" class="block w-full text-center bg-slate-100 py-3 rounded-lg text-[10px] font-bold uppercase hover:bg-slate-200 transition">Pilih Paket</a>
             </div>
-
             <div class="p-10 rounded-[2rem] bg-slate-900 text-white card-plan flex flex-col border-none">
                 <h4 class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-4">Professional</h4>
                 <h3 class="text-2xl font-bold mb-2">Business Web</h3>
@@ -91,11 +89,8 @@
                     <li>- Premium SSL Security</li>
                     <li>- Custom Business Email</li>
                 </ul>
-                <a href="https://wa.link/ngg6oo" 
-                   target="_blank"
-                   class="block w-full text-center bg-blue-600 py-3 rounded-lg text-[10px] font-bold uppercase hover:bg-blue-700 transition">Pilih Paket</a>
+                <a href="https://wa.link/ngg6oo" target="_blank" class="block w-full text-center bg-blue-600 py-3 rounded-lg text-[10px] font-bold uppercase hover:bg-blue-700 transition">Pilih Paket</a>
             </div>
-
             <div class="p-10 rounded-[2rem] bg-blue-600 text-white card-plan flex flex-col border-none">
                 <h4 class="text-[10px] font-black uppercase tracking-widest text-blue-200 mb-4">Enterprise</h4>
                 <h3 class="text-2xl font-bold mb-2">Custom Project</h3>
@@ -105,9 +100,7 @@
                     <li>- Database Integration</li>
                     <li>- 24/7 Priority Support</li>
                 </ul>
-                <a href="https://wa.link/bdw8nd" 
-                   target="_blank"
-                   class="block w-full text-center bg-white text-blue-600 py-3 rounded-lg text-[10px] font-bold uppercase hover:bg-slate-50 transition">Pilih Paket</a>
+                <a href="https://wa.link/bdw8nd" target="_blank" class="block w-full text-center bg-white text-blue-600 py-3 rounded-lg text-[10px] font-bold uppercase hover:bg-slate-50 transition">Pilih Paket</a>
             </div>
         </div>
     </section>
@@ -122,15 +115,20 @@
                 </div>
                 <div>
                     <label class="text-[10px] font-bold uppercase text-slate-400">WhatsApp Number</label>
-                    <input type="tel" id="whatsapp" required oninput="this.value = this.value.replace(/[^0-9+]/g, '')" class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold focus:border-blue-600 transition bg-transparent" placeholder="">
+                    <input type="tel" id="whatsapp" required oninput="this.value = this.value.replace(/[^0-9+]/g, '')" class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold focus:border-blue-600 transition bg-transparent">
                 </div>
                 <div>
                     <label class="text-[10px] font-bold uppercase text-slate-400">Message</label>
-                    <textarea id="pesan" required rows="3" class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold focus:border-blue-600 transition bg-transparent" placeholder=""></textarea>
+                    <textarea id="pesan" required rows="3" class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold focus:border-blue-600 transition bg-transparent"></textarea>
                 </div>
                 <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-[11px] uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-100">
                     Kirim Inquiry
                 </button>
+                <p class="text-[9px] text-slate-400 mt-4 leading-tight">
+                    This site is protected by reCAPTCHA and the Google 
+                    <a href="https://policies.google.com/privacy" class="underline">Privacy Policy</a> and 
+                    <a href="https://policies.google.com/terms" class="underline">Terms of Service</a> apply.
+                </p>
             </form>
         </div>
     </section>
@@ -154,18 +152,16 @@
             btn.disabled = true;
             btn.innerText = "VERIFYING...";
 
-            // RECAPTCHA LOGIC ADDED
             grecaptcha.ready(function() {
                 grecaptcha.execute('6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI', {action: 'submit'}).then(async function(token) {
-                    
                     const payload = { email, whatsapp, pesan, captchaToken: token };
                     btn.innerText = "SENDING...";
 
                     try {
                         const res = await fetch('https://marz-store.vercel.app/api/index', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payload)
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
                         });
                         
                         const result = await res.json();
