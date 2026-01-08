@@ -128,11 +128,11 @@
 
             try {
                 // Endpoint diarahkan ke folder api/index
-                const res = await fetch('https://marz-store-backend.vercel.app/api/index', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+		const res = await fetch('https://marz-store-zfjc.vercel.app/api/index', {
+    			method: 'POST',
+    			headers: { 'Content-Type': 'application/json' },
+    			body: JSON.stringify(payload) // Pastikan pake payload, bukan formData
+		});
                 
                 const result = await res.json();
                 
