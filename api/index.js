@@ -9,25 +9,19 @@ const hpp = require('hpp');
 const app = express();
 
 // 1. Middleware Keamanan & CORS
-// Helmet membantu mengamankan header HTTP
 app.use(helmet()); 
-// Mengizinkan frontend dari domain mana pun untuk mengakses API ini
 app.use(cors({ origin: '*' })); 
-// Membatasi ukuran body agar server tidak overload (proteksi DDoS ringan)
 app.use(express.json({ limit: '10kb' })); 
-// Proteksi terhadap HTTP Parameter Pollution
 app.use(hpp()); 
 
-// 2. DB Connection (Optimasi untuk Vercel Serverless)
+// 2. DB Connection
 const connectDB = async () => {
-    // Jika koneksi sudah ada, jangan buat koneksi baru (menghemat kuota koneksi MongoDB)
     if (mongoose.connection.readyState >= 1) return;
     try {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log("MongoDB Connected");
     } catch (err) {
         console.error("DB Error:", err.message);
-        // Jangan throw error di sini agar serverless function tidak langsung mati
     }
 };
 
@@ -42,37 +36,55 @@ const InquirySchema = new mongoose.Schema({
 const Inquiry = mongoose.models.Inquiry || mongoose.model('Inquiry', InquirySchema);
 
 // 4. Routes
-// Endpoint GET untuk cek kesehatan server (Health Check)
 app.get('/api/index', (req, res) => {
     res.status(200).send('Server Marz Store Aman Terkendali');
 });
 
-// Endpoint POST untuk menerima data form
+// Endpoint POST dengan PROTEKSI RECAPTCHA
 app.post('/api/index', async (req, res) => {
     try {
-        // Pastikan koneksi DB nyala
+        const { email: rawEmail, whatsapp: rawWhatsapp, pesan: rawPesan, captchaToken } = req.body;
+
+        // --- A. VERIFIKASI RECAPTCHA (PENGHALANG BOT) ---
+        if (!captchaToken) {
+            return res.status(400).json({ status: 'error', message: 'Captcha token is missing!' });
+        }
+
+        const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=6Ld3YUQsAAAAAP5LnZvTgVJhT0T9hE2cWfZEBE3p&response=${captchaToken}`;
+        
+        const recaptchaRes = await fetch(verifyUrl, { method: 'POST' });
+        const recaptchaJson = await recaptchaRes.json();
+
+        // Jika Google bilang ini Bot (score biasanya di bawah 0.5)
+        if (!recaptchaJson.success || recaptchaJson.score < 0.5) {
+            return res.status(403).json({ 
+                status: 'error', 
+                message: 'Aktivitas bot terdeteksi! Silakan coba lagi.' 
+            });
+        }
+
+        // --- B. LANJUT KE PROSES DATA ---
         await connectDB();
         
-        // A. Sanitasi Input (Cegah serangan XSS/Script Injection)
-        const email = xss(req.body.email);
-        const whatsapp = xss(req.body.whatsapp);
-        const pesan = xss(req.body.pesan);
+        // Sanitasi Input
+        const email = xss(rawEmail);
+        const whatsapp = xss(rawWhatsapp);
+        const pesan = xss(rawPesan);
 
-        // B. Validasi Nomor WA Internasional
-        // Mendukung tanda '+' di awal dan angka 7-15 digit
+        // Validasi Nomor WA
         const internationalPhoneRegex = /^\+?[0-9]{7,15}$/;
         if (!internationalPhoneRegex.test(whatsapp)) {
             return res.status(400).json({ 
                 status: 'error', 
-                message: 'Format nomor telepon internasional tidak valid (Gunakan angka atau +)!' 
+                message: 'Format nomor telepon tidak valid!' 
             });
         }
 
-        // C. Simpan ke MongoDB
+        // Simpan ke MongoDB
         const newLead = new Inquiry({ email, whatsapp, pesan });
         await newLead.save();
 
-        // D. Konfigurasi Nodemailer (Kirim Email Notifikasi)
+        // Nodemailer
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: { 
@@ -81,15 +93,14 @@ app.post('/api/index', async (req, res) => {
             }
         });
 
-        // E. Kirim Email
+        // Kirim Email
         await transporter.sendMail({
             from: `"MARZ SYSTEM" <${process.env.EMAIL_USER}>`,
-            to: process.env.EMAIL_USER, // Notifikasi dikirim ke email lu sendiri
+            to: process.env.EMAIL_USER,
             subject: `KONSULTASI BARU: ${email}`,
-            text: `Detail Inquiry:\n\nEmail: ${email}\nWhatsApp: ${whatsapp}\nPesan: ${pesan}\n\nCek dashboard MongoDB untuk detail lengkap.`
+            text: `Detail Inquiry:\n\nEmail: ${email}\nWhatsApp: ${whatsapp}\nPesan: ${pesan}\n\nSkor Bot: ${recaptchaJson.score}`
         });
 
-        // Berikan respon sukses ke frontend
         res.status(200).json({ status: 'success', message: 'Data berhasil disimpan dan email terkirim' });
 
     } catch (err) {
@@ -102,5 +113,4 @@ app.post('/api/index', async (req, res) => {
     }
 });
 
-// 5. Export untuk Vercel (Express dideteksi sebagai Serverless Function)
 module.exports = app;
