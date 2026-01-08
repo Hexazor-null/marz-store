@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marz Store | Digital Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        :root { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #0f172a; }
+        .hero-bg { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 30px 30px; }
+        .nav-link { color: #334155; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; }
+        .card-plan { background: white; border: 1px solid #e2e8f0; transition: transform 0.3s ease; }
+        .card-plan:hover { transform: translateY(-10px); }
+    </style>
+</head>
+<body class="hero-bg">
+
+    <nav class="fixed w-full z-50 bg-white border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-8 py-5 flex justify-between items-center">
+            <div class="text-xl font-extrabold uppercase tracking-tighter">MARZ<span class="text-blue-600">STORE</span></div>
+            <div class="hidden md:flex space-x-10">
+                <a href="#home" class="nav-link hover:text-blue-600">Beranda</a>
+                <a href="#layanan" class="nav-link hover:text-blue-600">Layanan</a>
+                <a href="#hubungi" class="nav-link hover:text-blue-600">Hubungi</a>
+            </div>
+            <a href="#hubungi" class="bg-blue-600 text-white px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">Get Started</a>
+        </div>
+    </nav>
+
+    <section id="home" class="min-h-screen flex flex-col justify-center items-center px-6 text-center pt-20">
+        <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight text-slate-900 mb-8 leading-none">
+            Digitalisasi Bisnis <br> <span class="text-blue-600">Tanpa Kompromi</span>
+        </h1>
+        <p class="text-slate-500 text-lg max-w-2xl mx-auto mb-12">Solusi arsitektur digital untuk pertumbuhan bisnis modern Anda.</p>
+        <div class="flex gap-4">
+            <a href="#layanan" class="bg-slate-900 text-white px-10 py-4 rounded-xl font-bold text-xs uppercase tracking-widest">Lihat Paket</a>
+            <a href="#hubungi" class="bg-white border border-slate-200 text-slate-900 px-10 py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50">Konsultasi</a>
+        </div>
+    </section>
+
+    <section id="layanan" class="py-32 bg-slate-50/50 px-8">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="p-10 rounded-[2rem] card-plan">
+                <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Starter</h4>
+                <h3 class="text-2xl font-bold mb-2">Landing Page</h3>
+                <div class="text-xl font-bold text-blue-600 mb-8">Rp 500.000</div>
+                <ul class="text-xs text-slate-500 space-y-4 mb-10">
+                    <li>- Single Page Design</li>
+                    <li>- Core SEO Setup</li>
+                    <li>- Free Hosting 1 Year</li>
+                </ul>
+                <a href="https://wa.me/6281252612046" class="block text-center bg-slate-100 py-3 rounded-lg text-[10px] font-bold uppercase">Pilih Paket</a>
+            </div>
+
+            <div class="p-10 rounded-[2rem] bg-slate-900 text-white card-plan">
+                <h4 class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-4">Professional</h4>
+                <h3 class="text-2xl font-bold mb-2">Business</h3>
+                <div class="text-xl font-bold text-blue-400 mb-8">Rp 900.000</div>
+                <ul class="text-xs text-slate-400 space-y-4 mb-10">
+                    <li>- Multi-Page Architecture</li>
+                    <li>- Premium SSL Security</li>
+                    <li>- Custom Business Email</li>
+                </ul>
+                <a href="https://wa.me/6281252612046" class="block text-center bg-blue-600 py-3 rounded-lg text-[10px] font-bold uppercase">Pilih Paket</a>
+            </div>
+
+            <div class="p-10 rounded-[2rem] bg-blue-600 text-white card-plan">
+                <h4 class="text-[10px] font-black uppercase tracking-widest text-blue-200 mb-4">Enterprise</h4>
+                <h3 class="text-2xl font-bold mb-2">Let's Talk</h3>
+                <div class="text-xl font-bold text-white mb-8">Custom Project</div>
+                <ul class="text-xs text-blue-100 space-y-4 mb-10">
+                    <li>- E-Commerce System</li>
+                    <li>- Database Integration</li>
+                    <li>- 24/7 Priority Support</li>
+                </ul>
+                <a href="#hubungi" class="block text-center bg-white text-blue-600 py-3 rounded-lg text-[10px] font-bold uppercase">Hubungi Kami</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="hubungi" class="py-32 bg-white px-8">
+        <div class="max-w-xl mx-auto">
+            <h2 class="text-3xl font-extrabold uppercase text-center mb-10">Konsultasi</h2>
+            <form id="consultForm" onsubmit="sendData(event)" class="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-xl space-y-6">
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-400">Email Address</label>
+                    <input type="email" id="email" required class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-400">WhatsApp Number</label>
+                    <input type="text" id="whatsapp" required class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold uppercase text-slate-400">Message</label>
+                    <textarea id="pesan" required rows="3" class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold"></textarea>
+                </div>
+                <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-[11px] uppercase tracking-widest hover:bg-blue-700 transition">
+                    Kirim Inquiry
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <footer class="py-20 text-center border-t border-slate-50">
+        <p class="text-slate-300 text-[10px] font-bold uppercase tracking-[0.5em]">&copy; 2026 Marz Store Indonesia</p>
+    </footer>
+
+    <script>
+        async function sendData(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            const payload = {
+                email: document.getElementById('email').value,
+                whatsapp: document.getElementById('whatsapp').value,
+                pesan: document.getElementById('pesan').value
+            };
+
+            btn.disabled = true;
+            btn.innerText = "SENDING...";
+
+            try {
+                const res = await fetch('http://localhost:3000/api/marz/consult', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    Swal.fire({ title: 'BERHASIL', text: 'Pesan telah terkirim.', icon: 'success' });
+                    document.getElementById('consultForm').reset();
+                }
+            } catch (err) {
+                Swal.fire('ERROR', 'Gagal menghubungi server.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Kirim Inquiry";
+            }
+        }
+    </script>
+</body>
+</html>
