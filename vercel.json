@@ -1,24 +1,17 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
-    }
+    { "src": "backend/server.js", "use": "@vercel/node" }
   ],
   "routes": [
     {
       "src": "/api/marz/consult",
-      "dest": "api/index.js",
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
+      "methods": ["POST", "OPTIONS"],
+      "dest": "backned/server.js"
     },
     {
       "src": "/(.*)",
-      "dest": "api/index.js"
+      "dest": "backend/server.js"
     }
   ]
 }
