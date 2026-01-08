@@ -33,7 +33,12 @@
             100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
         .animate-wa { animation: pulse-green 2s infinite; }
-        .grecaptcha-badge { visibility: hidden !important; }
+
+        /* JURUS AMPUH ILANGIN BADGE RECAPTCHA PAS DEPLOY */
+        .grecaptcha-badge { 
+            visibility: hidden !important; 
+            display: none !important; 
+        }
     </style>
 </head>
 <body class="hero-bg">
@@ -80,6 +85,7 @@
                 </ul>
                 <a href="https://wa.link/tw7tjs" target="_blank" class="block w-full text-center bg-slate-100 py-3 rounded-lg text-[10px] font-bold uppercase hover:bg-slate-200 transition">Pilih Paket</a>
             </div>
+
             <div class="p-10 rounded-[2rem] bg-slate-900 text-white card-plan flex flex-col border-none">
                 <h4 class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-4">Professional</h4>
                 <h3 class="text-2xl font-bold mb-2">Business Web</h3>
@@ -91,6 +97,7 @@
                 </ul>
                 <a href="https://wa.link/ngg6oo" target="_blank" class="block w-full text-center bg-blue-600 py-3 rounded-lg text-[10px] font-bold uppercase hover:bg-blue-700 transition">Pilih Paket</a>
             </div>
+
             <div class="p-10 rounded-[2rem] bg-blue-600 text-white card-plan flex flex-col border-none">
                 <h4 class="text-[10px] font-black uppercase tracking-widest text-blue-200 mb-4">Enterprise</h4>
                 <h3 class="text-2xl font-bold mb-2">Custom Project</h3>
@@ -154,14 +161,15 @@
 
             grecaptcha.ready(function() {
                 grecaptcha.execute('6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI', {action: 'submit'}).then(async function(token) {
+                    
                     const payload = { email, whatsapp, pesan, captchaToken: token };
                     btn.innerText = "SENDING...";
 
                     try {
                         const res = await fetch('https://marz-store.vercel.app/api/index', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
                         });
                         
                         const result = await res.json();
