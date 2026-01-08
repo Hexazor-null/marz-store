@@ -7,7 +7,7 @@
     {
       "src": "/api/marz/consult",
       "methods": ["POST", "OPTIONS"],
-      "dest": "backned/server.js"
+      "dest": "backend/server.js"
     },
     {
       "src": "/(.*)",
