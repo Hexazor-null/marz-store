@@ -1,7 +1,0 @@
-PORT=3000
-MONGODB_URI=mongodb+srv://temporarydb:beepbeepmarzy@temporarydb.dsrplrs.mongodb.net/webagency?retryWrites=true&w=majority&appName=temporarydb
-FRONTEND_URL=http://localhost:5500
-
-# Untuk Notifikasi Email Admin (Gunakan App Password Gmail)
-EMAIL_USER=umarfadlan45@gmail.com
-EMAIL_PASS=oxeq_dfcp_grfb_dsii
