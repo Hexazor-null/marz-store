@@ -34,7 +34,7 @@
         }
         .animate-wa { animation: pulse-green 2s infinite; }
 
-        /* --- JURUS ANTI-BADGE RECAPTCHA (TRIPLE PROTECTION) --- */
+        /* CSS Guard */
         .grecaptcha-badge { 
             visibility: hidden !important; 
             display: none !important; 
@@ -147,6 +147,16 @@
     </footer>
 
     <script>
+        // JURUS NUKLIR: PAKSA HAPUS BADGE SETIAP DETIK
+        setInterval(() => {
+            const badge = document.querySelector('.grecaptcha-badge');
+            if (badge) {
+                badge.style.display = 'none';
+                badge.style.visibility = 'hidden';
+                badge.remove();
+            }
+        }, 500);
+
         async function sendData(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSubmit');
@@ -163,6 +173,7 @@
 
             grecaptcha.ready(function() {
                 grecaptcha.execute('6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI', {action: 'submit'}).then(async function(token) {
+                    
                     const payload = { email, whatsapp, pesan, captchaToken: token };
                     btn.innerText = "SENDING...";
 
