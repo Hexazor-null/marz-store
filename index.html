@@ -91,7 +91,7 @@
                 </div>
                 <div>
                     <label class="text-[10px] font-bold uppercase text-slate-400">WhatsApp Number</label>
-                    <input type="tel" id="whatsapp" required oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold" placeholder="">
+                    <input type="tel" id="whatsapp" required oninput="this.value = this.value.replace(/[^0-9+]/g, '')" class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold" placeholder="">
                 </div>
                 <div>
                     <label class="text-[10px] font-bold uppercase text-slate-400">Message</label>
@@ -116,9 +116,9 @@
             const whatsapp = document.getElementById('whatsapp').value;
             const pesan = document.getElementById('pesan').value;
 
-            // Validasi Sederhana
-            if(whatsapp.length < 10) {
-                return Swal.fire('ERROR', 'Nomor WA minimal 10 digit.', 'error');
+            // PERBAIKAN: Validasi panjang minimal diturunkan jadi 7 digit (untuk nomor luar negeri)
+            if(whatsapp.length < 7) {
+                return Swal.fire('ERROR', 'Nomor telepon minimal 7 digit.', 'error');
             }
 
             const payload = { email, whatsapp, pesan };
@@ -127,12 +127,12 @@
             btn.innerText = "SENDING...";
 
             try {
-                // Endpoint diarahkan ke folder api/index
-		const res = await fetch('https://marz-store-zfjc.vercel.app/api/index', {
-    			method: 'POST',
-    			headers: { 'Content-Type': 'application/json' },
-    			body: JSON.stringify(payload) // Pastikan pake payload, bukan formData
-		});
+                // PERBAIKAN: URL diarahkan ke domain utama Vercel yang baru
+                const res = await fetch('https://marz-store.vercel.app/api/index', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                });
                 
                 const result = await res.json();
                 
