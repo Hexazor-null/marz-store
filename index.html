@@ -34,10 +34,10 @@
         }
         .animate-wa { animation: pulse-green 2s infinite; }
 
-        /* JURUS CSS TETAP DIPASANG */
+        /* PERTAHANAN LAPIS 1: CSS */
         .grecaptcha-badge { 
-            visibility: hidden !important; 
-            display: none !important; 
+            display: none !important;
+            visibility: hidden !important;
             opacity: 0 !important;
             pointer-events: none !important;
         }
@@ -147,15 +147,16 @@
     </footer>
 
     <script>
-        // JURUS NUKLIR: PAKSA HAPUS ELEMENT SETIAP DETIK
-        const forceHideBadge = () => {
+        // PERTAHANAN LAPIS 2: JAVASCRIPT OBSERVER (Memonitor kemunculan badge)
+        const observer = new MutationObserver(() => {
             const badge = document.querySelector('.grecaptcha-badge');
             if (badge) {
                 badge.style.setProperty('display', 'none', 'important');
                 badge.style.setProperty('visibility', 'hidden', 'important');
+                badge.remove(); // Hapus paksa dari DOM
             }
-        };
-        setInterval(forceHideBadge, 1000); // Cek tiap 1 detik
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
 
         async function sendData(event) {
             event.preventDefault();
