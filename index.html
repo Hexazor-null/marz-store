@@ -14,6 +14,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://marz-web.web.id">
 
+    <script src="https://www.google.com/recaptcha/api.js?render=6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -150,32 +151,40 @@
                 return Swal.fire('ERROR', 'Nomor telepon minimal 7 digit.', 'error');
             }
 
-            const payload = { email, whatsapp, pesan };
             btn.disabled = true;
-            btn.innerText = "SENDING...";
+            btn.innerText = "VERIFYING...";
 
-            try {
-                const res = await fetch('https://marz-store.vercel.app/api/index', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+            // RECAPTCHA LOGIC ADDED
+            grecaptcha.ready(function() {
+                grecaptcha.execute('6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI', {action: 'submit'}).then(async function(token) {
+                    
+                    const payload = { email, whatsapp, pesan, captchaToken: token };
+                    btn.innerText = "SENDING...";
+
+                    try {
+                        const res = await fetch('https://marz-store.vercel.app/api/index', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                        });
+                        
+                        const result = await res.json();
+                        
+                        if (res.ok) {
+                            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#2563eb', '#0f172a', '#ffffff'] });
+                            Swal.fire({ title: 'BERHASIL', text: 'Pesan Anda sudah kami terima.', icon: 'success', confirmButtonColor: '#2563eb' });
+                            document.getElementById('consultForm').reset();
+                        } else {
+                            Swal.fire('ERROR', result.message || 'Gagal memproses data.', 'error');
+                        }
+                    } catch (err) {
+                        Swal.fire('ERROR', 'Gagal menghubungi server.', 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerText = "Kirim Inquiry";
+                    }
                 });
-                
-                const result = await res.json();
-                
-                if (res.ok) {
-                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#2563eb', '#0f172a', '#ffffff'] });
-                    Swal.fire({ title: 'BERHASIL', text: 'Pesan Anda sudah kami terima.', icon: 'success', confirmButtonColor: '#2563eb' });
-                    document.getElementById('consultForm').reset();
-                } else {
-                    Swal.fire('ERROR', result.message || 'Gagal memproses data.', 'error');
-                }
-            } catch (err) {
-                Swal.fire('ERROR', 'Gagal menghubungi server.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Kirim Inquiry";
-            }
+            });
         }
     </script>
 </body>
