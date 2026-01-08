@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://marz-web.web.id/sitemap.xml
