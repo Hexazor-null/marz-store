@@ -91,7 +91,7 @@
                 </div>
                 <div>
                     <label class="text-[10px] font-bold uppercase text-slate-400">WhatsApp Number</label>
-                    <input type="text" id="whatsapp" required class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold">
+                    <input type="tel" id="whatsapp" required oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full mt-2 border-b border-slate-200 outline-none py-2 text-sm font-semibold" placeholder="">
                 </div>
                 <div>
                     <label class="text-[10px] font-bold uppercase text-slate-400">Message</label>
@@ -112,22 +112,29 @@
         async function sendData(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSubmit');
-            const payload = {
-                email: document.getElementById('email').value,
-                whatsapp: document.getElementById('whatsapp').value,
-                pesan: document.getElementById('pesan').value
-            };
+            const email = document.getElementById('email').value;
+            const whatsapp = document.getElementById('whatsapp').value;
+            const pesan = document.getElementById('pesan').value;
+
+            // Validasi Sederhana
+            if(whatsapp.length < 10) {
+                return Swal.fire('ERROR', 'Nomor WA minimal 10 digit.', 'error');
+            }
+
+            const payload = { email, whatsapp, pesan };
 
             btn.disabled = true;
             btn.innerText = "SENDING...";
 
             try {
-                // LINK SUDAH DIARAHKAN KE VERCEL
+                // Endpoint diarahkan ke folder api/index
                 const res = await fetch('https://marz-store-backend.vercel.app/api/index', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+                
+                const result = await res.json();
                 
                 if (res.ok) {
                     Swal.fire({ 
@@ -138,7 +145,7 @@
                     });
                     document.getElementById('consultForm').reset();
                 } else {
-                    Swal.fire('ERROR', 'Gagal memproses data.', 'error');
+                    Swal.fire('ERROR', result.message || 'Gagal memproses data.', 'error');
                 }
             } catch (err) {
                 Swal.fire('ERROR', 'Gagal menghubungi server.', 'error');

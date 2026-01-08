@@ -8,55 +8,48 @@ const hpp = require('hpp');
 
 const app = express();
 
-// --- LAYER KEAMANAN ---
-app.use(helmet()); 
+// Middleware Keamanan & CORS
+app.use(helmet());
 app.use(cors({ origin: '*' })); 
-app.use(express.json({ limit: '10kb' })); 
-app.use(hpp()); 
+app.use(express.json({ limit: '10kb' }));
+app.use(hpp());
 
-// --- DATABASE SCHEMA ---
-const InquirySchema = new mongoose.Schema({
-    email: { type: String, required: true },
-    whatsapp: { type: String, required: true },
-    pesan: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
-});
-const Inquiry = mongoose.models.Inquiry || mongoose.model('Inquiry', InquirySchema);
-
-// --- KONEKSI DATABASE ---
+// DB Connection (Serverless Optimized)
 const connectDB = async () => {
     if (mongoose.connection.readyState >= 1) return;
     try {
         await mongoose.connect(process.env.MONGODB_URI);
     } catch (err) {
-        console.error("MongoDB Error:", err.message);
+        console.error("DB Error:", err.message);
     }
 };
 
-// --- ROUTES ---
+// Model
+const Inquiry = mongoose.models.Inquiry || mongoose.model('Inquiry', new mongoose.Schema({
+    email: { type: String, required: true },
+    whatsapp: { type: String, required: true },
+    pesan: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+}));
 
-// Cek status server
-app.get('/', (req, res) => {
+// Routes
+app.get('/api/index', (req, res) => {
     res.status(200).send('Server Marz Store Aman Terkendali');
 });
 
-// Endpoint POST Konsultasi
-app.post('/api/marz/consult', async (req, res) => {
+app.post('/api/index', async (req, res) => {
     try {
         await connectDB();
-
-        // 1. Sanitasi Input
+        
+        // 1. Sanitasi Dasar
         const email = xss(req.body.email);
         const whatsapp = xss(req.body.whatsapp);
         const pesan = xss(req.body.pesan);
 
-        // 2. Validasi Server-Side
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ status: 'error', message: 'Format email tidak valid' });
-        }
-        if (whatsapp.length < 10 || whatsapp.length > 15) {
-            return res.status(400).json({ status: 'error', message: 'Nomor WhatsApp tidak valid' });
+        // 2. Validasi Angka Saja untuk WA
+        const phoneRegex = /^[0-9]{10,15}$/;
+        if (!phoneRegex.test(whatsapp)) {
+            return res.status(400).json({ status: 'error', message: 'Nomor WA harus berupa angka!' });
         }
 
         // 3. Simpan ke MongoDB
@@ -66,35 +59,26 @@ app.post('/api/marz/consult', async (req, res) => {
         // 4. Konfigurasi Nodemailer
         const transporter = nodemailer.createTransport({
             service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
+            auth: { 
+                user: process.env.EMAIL_USER, 
+                pass: process.env.EMAIL_PASS 
             }
         });
 
         // 5. Kirim Email Notifikasi
         await transporter.sendMail({
-            from: `"MARZ STORE SECURITY" <${process.env.EMAIL_USER}>`,
+            from: `"MARZ SYSTEM" <${process.env.EMAIL_USER}>`,
             to: process.env.EMAIL_USER,
             subject: `KONSULTASI BARU: ${email}`,
-            html: `
-                <div style="font-family: sans-serif; padding: 20px; border: 2px solid #2563eb; border-radius: 10px;">
-                    <h2 style="color: #2563eb;">Inquiry Baru Diterima</h2>
-                    <p><strong>Email Pengirim:</strong> ${email}</p>
-                    <p><strong>WhatsApp:</strong> ${whatsapp}</p>
-                    <p><strong>Isi Pesan:</strong> ${pesan}</p>
-                    <hr>
-                    <p style="font-size: 12px; color: #666;">Data telah diamankan di sistem.</p>
-                </div>
-            `
+            text: `Nomor WhatsApp: ${whatsapp}\nPesan: ${pesan}`
         });
 
-        return res.status(200).json({ status: 'success', message: 'Data aman terkirim' });
-
+        res.status(200).json({ status: 'success' });
     } catch (err) {
-        console.error("System Failure:", err.message);
-        return res.status(500).json({ status: 'error', message: 'Internal Server Error' });
+        console.error("Backend Error:", err.message);
+        res.status(500).json({ status: 'error', message: 'Internal Server Error' });
     }
 });
 
+// Export untuk Vercel
 module.exports = app;
