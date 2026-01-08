@@ -122,14 +122,23 @@
             btn.innerText = "SENDING...";
 
             try {
-                const res = await fetch('http://localhost:3000/api/marz/consult', {
+                // LINK SUDAH DIARAHKAN KE VERCEL
+                const res = await fetch('https://marz-store-backend.vercel.app/api/marz/consult', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+                
                 if (res.ok) {
-                    Swal.fire({ title: 'BERHASIL', text: 'Pesan telah terkirim.', icon: 'success' });
+                    Swal.fire({ 
+                        title: 'BERHASIL', 
+                        text: 'Pesan telah terkirim.', 
+                        icon: 'success',
+                        confirmButtonColor: '#2563eb'
+                    });
                     document.getElementById('consultForm').reset();
+                } else {
+                    Swal.fire('ERROR', 'Gagal memproses data.', 'error');
                 }
             } catch (err) {
                 Swal.fire('ERROR', 'Gagal menghubungi server.', 'error');
