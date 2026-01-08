@@ -1,12 +1,14 @@
 {
   "version": 2,
   "builds": [
-    { "src": "backend/server.js", "use": "@vercel/node" }
+    {
+      "src": "backend/server.js",
+      "use": "@vercel/node"
+    }
   ],
   "routes": [
     {
-      "src": "/api/marz/consult",
-      "methods": ["POST", "OPTIONS"],
+      "src": "/api/(.*)",
       "dest": "backend/server.js"
     },
     {
