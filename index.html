@@ -34,10 +34,11 @@
         }
         .animate-wa { animation: pulse-green 2s infinite; }
 
-        /* JURUS AMPUH ILANGIN BADGE RECAPTCHA PAS DEPLOY */
+        /* --- TAMBAHAN KHUSUS UNTUK NGILANGIN LOGO CAPTCHA --- */
         .grecaptcha-badge { 
             visibility: hidden !important; 
             display: none !important; 
+            opacity: 0 !important;
         }
     </style>
 </head>
@@ -131,6 +132,7 @@
                 <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-[11px] uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-100">
                     Kirim Inquiry
                 </button>
+                
                 <p class="text-[9px] text-slate-400 mt-4 leading-tight">
                     This site is protected by reCAPTCHA and the Google 
                     <a href="https://policies.google.com/privacy" class="underline">Privacy Policy</a> and 
