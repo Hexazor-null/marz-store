@@ -34,11 +34,12 @@
         }
         .animate-wa { animation: pulse-green 2s infinite; }
 
-        /* --- TAMBAHAN KHUSUS UNTUK NGILANGIN LOGO CAPTCHA --- */
+        /* --- JURUS ANTI-BADGE RECAPTCHA (TRIPLE PROTECTION) --- */
         .grecaptcha-badge { 
             visibility: hidden !important; 
             display: none !important; 
             opacity: 0 !important;
+            pointer-events: none !important;
         }
     </style>
 </head>
@@ -132,7 +133,6 @@
                 <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-[11px] uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-100">
                     Kirim Inquiry
                 </button>
-                
                 <p class="text-[9px] text-slate-400 mt-4 leading-tight">
                     This site is protected by reCAPTCHA and the Google 
                     <a href="https://policies.google.com/privacy" class="underline">Privacy Policy</a> and 
@@ -163,7 +163,6 @@
 
             grecaptcha.ready(function() {
                 grecaptcha.execute('6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI', {action: 'submit'}).then(async function(token) {
-                    
                     const payload = { email, whatsapp, pesan, captchaToken: token };
                     btn.innerText = "SENDING...";
 
