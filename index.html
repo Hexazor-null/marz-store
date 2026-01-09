@@ -22,7 +22,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         :root { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #0f172a; }
+        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #0f172a; overflow-x: hidden; } /* Tambah overflow-x hidden */
         .hero-bg { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 30px 30px; }
         .nav-link { color: #334155; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; }
         .card-plan { background: white; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
@@ -34,12 +34,17 @@
         }
         .animate-wa { animation: pulse-green 2s infinite; }
 
-        /* PERTAHANAN LAPIS 1: CSS */
+        /* --- STRATEGI BARU: LEMPAR KE LUAR LAYAR --- */
+        /* Kita gak pakai display:none biar google gak curiga */
         .grecaptcha-badge { 
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
+            position: absolute !important;
+            left: -10000px !important;  /* Geser jauh ke kiri */
+            top: -10000px !important;   /* Geser jauh ke atas */
+            opacity: 0 !important;      /* Bikin transparan */
+            z-index: -999 !important;   /* Taruh di paling belakang */
+            pointer-events: none !important; /* Gak bisa diklik */
+            width: 0 !important;
+            height: 0 !important;
         }
     </style>
 </head>
@@ -147,16 +152,18 @@
     </footer>
 
     <script>
-        // PERTAHANAN LAPIS 2: JAVASCRIPT OBSERVER (Memonitor kemunculan badge)
-        const observer = new MutationObserver(() => {
-            const badge = document.querySelector('.grecaptcha-badge');
-            if (badge) {
-                badge.style.setProperty('display', 'none', 'important');
-                badge.style.setProperty('visibility', 'hidden', 'important');
-                badge.remove(); // Hapus paksa dari DOM
-            }
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
+        // STRATEGI: Pantau terus, kalau muncul langsung lempar
+        setInterval(() => {
+            const badges = document.querySelectorAll('.grecaptcha-badge');
+            badges.forEach(badge => {
+                // Jangan dihapus, tapi geser jauh biar gak ngerusak logic google
+                badge.style.position = 'absolute';
+                badge.style.left = '-9999px';
+                badge.style.top = '-9999px';
+                badge.style.opacity = '0';
+                badge.style.zIndex = '-1000';
+            });
+        }, 1000); // Cek tiap detik
 
         async function sendData(event) {
             event.preventDefault();
@@ -174,6 +181,7 @@
 
             grecaptcha.ready(function() {
                 grecaptcha.execute('6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI', {action: 'submit'}).then(async function(token) {
+                    
                     const payload = { email, whatsapp, pesan, captchaToken: token };
                     btn.innerText = "SENDING...";
 
