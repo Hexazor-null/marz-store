@@ -7,6 +7,8 @@
     <title>Marz Store | Premium Web Development</title>
     <meta name="description" content="Membangun kredibilitas bisnis melalui website profesional. Solusi digital end-to-end oleh Marz Store.">
     
+    <link rel="icon" type="image/png" href="favicon.png">
+    
     <script src="https://www.google.com/recaptcha/api.js?render=6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -276,7 +278,8 @@
                 grecaptcha.execute('6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI', {action: 'submit'}).then(async function(token) {
                     const payload = { email, whatsapp, pesan, captchaToken: token };
                     try {
-                        const res = await fetch('https://marz-store.vercel.app/api/index', {
+                        // UPDATE: Menggunakan subdomain API profesional Anda
+                        const res = await fetch('https://api.marz-web.web.id/api/index', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
