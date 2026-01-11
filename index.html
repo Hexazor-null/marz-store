@@ -9,6 +9,14 @@
     
     <link rel="icon" type="image/png" href="favicon.png">
     
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17868198281"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17868198281');
+    </script>
+
     <script src="https://www.google.com/recaptcha/api.js?render=6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -26,14 +34,12 @@
             letter-spacing: -0.01em;
         }
 
-        /* Modern Background Pattern */
         .hero-pattern { 
             background-color: #ffffff;
             background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
             background-size: 24px 24px;
         }
         
-        /* Smooth Entrance */
         .reveal { opacity: 0; transform: translateY(20px); transition: all 0.8s ease-out; }
         .reveal.active { opacity: 1; transform: translateY(0); }
 
@@ -46,12 +52,10 @@
             box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
         }
 
-        /* Anti-reCAPTCHA Hack */
         .grecaptcha-badge { 
             visibility: hidden !important;
         }
 
-        /* Custom Input Styling */
         input:focus, textarea:focus {
             border-color: #2563eb !important;
             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
@@ -238,7 +242,6 @@
     </footer>
 
     <script>
-        // Anti-reCAPTCHA Hidden Loop
         setInterval(() => {
             const badges = document.querySelectorAll('.grecaptcha-badge');
             badges.forEach(badge => {
@@ -247,7 +250,6 @@
             });
         }, 500);
 
-        // Simple Reveal on Scroll
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) entry.target.classList.add('active');
@@ -266,7 +268,6 @@
             const whatsapp = document.getElementById('whatsapp').value;
             const pesan = document.getElementById('pesan').value;
 
-            // Extra Validation
             if (whatsapp.length < 9) {
                 return Swal.fire('Error', 'Nomor WhatsApp minimal 9 digit.', 'error');
             }
@@ -278,7 +279,6 @@
                 grecaptcha.execute('6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI', {action: 'submit'}).then(async function(token) {
                     const payload = { email, whatsapp, pesan, captchaToken: token };
                     try {
-                        // UPDATE: Menggunakan subdomain API profesional Anda
                         const res = await fetch('https://api.marz-web.web.id/api/index', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -286,6 +286,10 @@
                         });
                         
                         if (res.ok) {
+                            // --- KONVERSI GOOGLE ADS DISINI ---
+                            gtag('event', 'conversion', {'send_to': 'AW-17868198281/syfqCOTCleEbEImjnMhC'});
+                            // ----------------------------------
+
                             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#2563eb', '#1e293b'] });
                             Swal.fire({
                                 title: 'Terima Kasih',
