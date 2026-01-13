@@ -71,21 +71,22 @@
             border-color: #2563eb !important;
             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
         }
-        
-        /* Custom border for images */
+
+        /* PERBAIKAN: Layout Gambar Menuruti Border */
         .img-container {
-            position: relative;
             width: 100%;
-            height: 240px; /* Fixed height for consistency */
+            height: 240px; /* Tinggi kotak gambar */
             overflow: hidden;
-            border-radius: 1.5rem; /* Match card rounding */
-            background: #f8fafc;
+            border-radius: 1.5rem; /* Rounding disamain */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .img-container img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* This makes it fill the border */
-            object-position: center;
+            object-fit: cover; /* Mastiin gambar menuhin kotak tanpa gepeng */
+            display: block;
         }
     </style>
 </head>
@@ -133,13 +134,41 @@
         </div>
     </section>
 
+    <section id="tentang" class="py-32 bg-slate-900 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-1/2 h-full bg-blue-600/5 blur-[120px] rounded-full translate-x-1/2"></div>
+        <div class="max-w-6xl mx-auto px-6 relative z-10 grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+            <div>
+                <h2 class="text-3xl md:text-5xl font-bold text-white mb-8 leading-tight tracking-tight">
+                    Anda Fokus Tumbuh,<br>Kami Urus Teknismu.
+                </h2>
+                <div class="space-y-6 text-slate-400 leading-relaxed text-lg font-light">
+                    <p class="text-blue-400 font-semibold text-xl leading-snug">
+                        "Marz Store hadir untuk mengurus sisi teknis website, agar Anda bisa fokus menjalankan dan mengembangkan bisnis."
+                    </p>
+                    <p>
+                        Kami mengambil alih seluruh kompleksitas infrastruktur digital Anda. Dari manajemen server hingga optimasi keamanan, semua ditangani secara profesional untuk memastikan operasional bisnis Anda berjalan tanpa hambatan.
+                    </p>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div class="group p-8 bg-white/5 border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all">
+                    <h3 class="text-white font-bold text-xl mb-2">Technical Mastery</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Penanganan backend, SSL, dan skalabilitas hosting secara komprehensif.</p>
+                </div>
+                <div class="group p-8 bg-blue-600 rounded-[2rem] shadow-2xl shadow-blue-900/20">
+                    <h3 class="text-white font-bold text-xl mb-2">High-End Result</h3>
+                    <p class="text-blue-100 text-sm leading-relaxed">Standar desain modern yang responsif dan dioptimasi untuk kecepatan akses maksimal.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="paket" class="py-32 px-8">
         <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
             
             <div class="p-10 rounded-[2.5rem] border border-slate-100 bg-white hover:shadow-2xl transition-all duration-500">
-                <div class="img-container mb-8 border border-slate-100">
-                    <img src="Rimberio.png" alt="Essential" 
-                         onerror="this.src='https://placehold.co/600x400/f1f5f9/64748b?text=Essential+Preview'">
+                <div class="img-container mb-8 bg-slate-50 border border-slate-100">
+                    <img src="Rimberio.png" alt="Essential">
                 </div>
                 <p class="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-6">Essential</p>
                 <h3 class="text-2xl font-bold mb-1">Landing Page</h3>
@@ -155,10 +184,9 @@
             <div class="p-10 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl relative transform md:-translate-y-6">
                 <div class="absolute top-6 right-8 bg-blue-600 text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Most Popular</div>
                 <div class="img-container mb-8 bg-white/5 border border-white/10">
-                    <img src="Rim.png" alt="Corporate"
-                         onerror="this.src='https://placehold.co/600x400/1e293b/94a3b8?text=Corporate+Preview'">
+                    <img src="Rim.png" alt="Corporate" style="object-fit: contain; padding: 20px;">
                 </div>
-                <p class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-6 uppercase">Business</p>
+                <p class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-6">Business</p>
                 <h3 class="text-2xl font-bold mb-1 text-white">Corporate Web</h3>
                 <div class="text-3xl font-extrabold text-white mb-8">999K</div>
                 <ul class="text-sm text-slate-400 space-y-4 mb-10 font-medium">
@@ -170,11 +198,10 @@
             </div>
 
             <div class="p-10 rounded-[2.5rem] border border-slate-100 bg-white hover:shadow-2xl transition-all duration-500">
-                <div class="img-container mb-8 border border-slate-100">
-                    <img src="Rimberio.jpg" alt="Custom"
-                         onerror="this.src='https://placehold.co/600x400/f1f5f9/64748b?text=Custom+Preview'">
+                <div class="img-container mb-8 bg-slate-50 border border-slate-100">
+                    <img src="Rimberio.jpg" alt="Custom Project">
                 </div>
-                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 uppercase">Specialized</p>
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Specialized</p>
                 <h3 class="text-2xl font-bold mb-1">Custom Project</h3>
                 <div class="text-3xl font-extrabold text-slate-900 mb-8">Discuss</div>
                 <ul class="text-sm text-slate-500 space-y-4 mb-10 font-medium">
@@ -226,6 +253,7 @@
     </footer>
 
     <script>
+        // Sembunyikan badge reCAPTCHA
         setInterval(() => {
             const badges = document.querySelectorAll('.grecaptcha-badge');
             badges.forEach(badge => {
@@ -234,6 +262,7 @@
             });
         }, 500);
 
+        // Efek Reveal saat Scroll
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) entry.target.classList.add('active');
@@ -245,6 +274,7 @@
             observer.observe(section);
         });
 
+        // Logika Pengiriman Data
         async function sendData(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSubmit');
@@ -270,9 +300,13 @@
                         });
                         
                         if (res.ok) {
+                            // Tracking Iklan & Pixel
                             gtag('event', 'conversion', {'send_to': 'AW-17868198281/syfqCOTCleEbEImjnMhC'});
                             fbq('track', 'Lead');
+
+                            // Efek Kembang Api
                             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#2563eb', '#1e293b'] });
+
                             Swal.fire({
                                 title: 'Terima Kasih',
                                 text: 'Inkuiri Anda telah kami terima. Tim Marz akan menghubungi segera.',
