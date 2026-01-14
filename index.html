@@ -18,18 +18,20 @@
     </script>
 
     <script>
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '1222746983301297'); 
-      fbq('track', 'PageView');
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1392380808958794');
+    fbq('track', 'PageView');
     </script>
-
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1392380808958794&ev=PageView&noscript=1"
+    /></noscript>
     <script src="https://www.google.com/recaptcha/api.js?render=6Ld3YUQsAAAAAIR7Qu4-kmYt9dR1VIehR4PydhwI"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -72,20 +74,20 @@
             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
         }
 
-        /* PERBAIKAN: Layout Gambar Menuruti Border */
         .img-container {
             width: 100%;
-            height: 240px; /* Tinggi kotak gambar */
+            height: 240px; 
             overflow: hidden;
-            border-radius: 1.5rem; /* Rounding disamain */
+            border-radius: 1.5rem; 
             display: flex;
             align-items: center;
             justify-content: center;
+            background: #f8fafc;
         }
         .img-container img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Mastiin gambar menuhin kotak tanpa gepeng */
+            object-fit: cover; 
             display: block;
         }
     </style>
@@ -167,7 +169,7 @@
         <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
             
             <div class="p-10 rounded-[2.5rem] border border-slate-100 bg-white hover:shadow-2xl transition-all duration-500">
-                <div class="img-container mb-8 bg-slate-50 border border-slate-100">
+                <div class="img-container mb-8">
                     <img src="Rimberio.png" alt="Essential">
                 </div>
                 <p class="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-6">Essential</p>
@@ -177,6 +179,7 @@
                     <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Custom Sales Page</li>
                     <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>WhatsApp Integration</li>
                     <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Free Hosting (1 Year)</li>
+                    <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Responsive UI/UX</li>
                 </ul>
                 <a href="https://wa.link/tw7tjs" target="_blank" class="block w-full text-center py-4 rounded-xl border border-slate-200 text-slate-900 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all">Pesan Sekarang</a>
             </div>
@@ -193,21 +196,23 @@
                     <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Professional Multi-Page</li>
                     <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Free .COM Domain</li>
                     <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Business Email Setup</li>
+                    <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>SEO Optimized</li>
                 </ul>
                 <a href="https://wa.link/ngg6oo" target="_blank" class="block w-full text-center py-4 rounded-xl bg-blue-600 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-900/40">Mulai Sekarang</a>
             </div>
 
             <div class="p-10 rounded-[2.5rem] border border-slate-100 bg-white hover:shadow-2xl transition-all duration-500">
-                <div class="img-container mb-8 bg-slate-50 border border-slate-100">
+                <div class="img-container mb-8">
                     <img src="Rimberio.jpg" alt="Custom Project">
                 </div>
                 <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Specialized</p>
                 <h3 class="text-2xl font-bold mb-1">Custom Project</h3>
                 <div class="text-3xl font-extrabold text-slate-900 mb-8">Discuss</div>
                 <ul class="text-sm text-slate-500 space-y-4 mb-10 font-medium">
-                    <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Complex Web App</li>
-                    <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>API Integration</li>
+                    <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Complex Web Application</li>
+                    <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Full API Integration</li>
                     <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>Premium SLA Support</li>
+                    <li class="flex items-center gap-3"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>No Gambling/Fraud Content</li>
                 </ul>
                 <a href="https://wa.link/bdw8nd" target="_blank" class="block w-full text-center py-4 rounded-xl border border-slate-200 text-slate-900 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all">Hubungi Kami</a>
             </div>
@@ -253,7 +258,6 @@
     </footer>
 
     <script>
-        // Sembunyikan badge reCAPTCHA
         setInterval(() => {
             const badges = document.querySelectorAll('.grecaptcha-badge');
             badges.forEach(badge => {
@@ -262,7 +266,6 @@
             });
         }, 500);
 
-        // Efek Reveal saat Scroll
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) entry.target.classList.add('active');
@@ -274,7 +277,6 @@
             observer.observe(section);
         });
 
-        // Logika Pengiriman Data
         async function sendData(event) {
             event.preventDefault();
             const btn = document.getElementById('btnSubmit');
@@ -300,25 +302,16 @@
                         });
                         
                         if (res.ok) {
-                            // Tracking Iklan & Pixel
                             gtag('event', 'conversion', {'send_to': 'AW-17868198281/syfqCOTCleEbEImjnMhC'});
                             fbq('track', 'Lead');
-
-                            // Efek Kembang Api
                             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#2563eb', '#1e293b'] });
-
-                            Swal.fire({
-                                title: 'Terima Kasih',
-                                text: 'Inkuiri Anda telah kami terima. Tim Marz akan menghubungi segera.',
-                                icon: 'success',
-                                confirmButtonColor: '#1e293b'
-                            });
+                            Swal.fire({ title: 'Terima Kasih', text: 'Inkuiri Anda telah kami terima.', icon: 'success' });
                             document.getElementById('consultForm').reset();
                         } else {
-                            Swal.fire('Gagal', 'Sistem kami sedang sibuk, silakan coba lagi.', 'error');
+                            Swal.fire('Gagal', 'Sistem kami sedang sibuk.', 'error');
                         }
                     } catch (err) {
-                        Swal.fire('Error', 'Periksa koneksi internet Anda.', 'error');
+                        Swal.fire('Error', 'Periksa koneksi internet.', 'error');
                     } finally {
                         btn.disabled = false;
                         btn.innerText = "Kirim Permintaan";
