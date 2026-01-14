@@ -84,11 +84,20 @@
             justify-content: center;
             background: #f8fafc;
         }
-        .img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; 
-            display: block;
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
     </style>
 </head>
@@ -168,9 +177,20 @@
     <section id="paket" class="py-32 px-8">
         <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
             
+            <!-- Essential Plan -->
             <div class="p-10 rounded-[2.5rem] border border-slate-100 bg-white hover:shadow-2xl transition-all duration-500">
                 <div class="img-container mb-8">
-                    <img src="Rimberio.png" alt="Essential">
+                    <svg width="150" height="150" viewBox="0 0 150 150" style="animation: rotate 10s linear infinite;">
+                        <circle cx="75" cy="75" r="70" fill="none" stroke="#4CAF50" stroke-width="3"/>
+                        <circle cx="75" cy="75" r="49" fill="none" stroke="#8BC34A" stroke-width="3"/>
+                        <circle cx="75" cy="75" r="28" fill="url(#essentialGradient)" stroke="#CDDC39" stroke-width="3"/>
+                        <defs>
+                            <linearGradient id="essentialGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#8BC34A;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
                 </div>
                 <p class="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-6">Essential</p>
                 <h3 class="text-2xl font-bold mb-1">Landing Page</h3>
@@ -184,10 +204,33 @@
                 <a href="https://wa.link/tw7tjs" target="_blank" class="block w-full text-center py-4 rounded-xl border border-slate-200 text-slate-900 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all">Pesan Sekarang</a>
             </div>
 
+            <!-- Business Plan -->
             <div class="p-10 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl relative transform md:-translate-y-6">
                 <div class="absolute top-6 right-8 bg-blue-600 text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Most Popular</div>
                 <div class="img-container mb-8 bg-white/5 border border-white/10">
-                    <img src="Rim.png" alt="Corporate" style="object-fit: contain; padding: 20px;">
+                    <svg width="150" height="150" viewBox="0 0 150 150">
+                        <defs>
+                            <linearGradient id="businessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#2196F3;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#3F51B5;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <g style="animation: pulse 2s ease-in-out infinite;">
+                            <polygon points="75,15 110,37.5 110,82.5 75,105 40,82.5 40,37.5" fill="url(#businessGradient)" opacity="0.4"/>
+                        </g>
+                        <g style="animation: pulse 2s ease-in-out 0.2s infinite;">
+                            <polygon points="75,5 115,30 115,80 75,105 35,80 35,30" fill="url(#businessGradient)" opacity="0.6"/>
+                        </g>
+                        <g style="animation: pulse 2s ease-in-out 0.4s infinite;">
+                            <polygon points="75,45 95,57.5 95,82.5 75,95 55,82.5 55,57.5" fill="url(#businessGradient)"/>
+                        </g>
+                        <g style="animation: pulse 2s ease-in-out 0.6s infinite;">
+                            <polygon points="40,60 55,70 55,90 40,100 25,90 25,70" fill="url(#businessGradient)" opacity="0.7"/>
+                        </g>
+                        <g style="animation: pulse 2s ease-in-out 0.8s infinite;">
+                            <polygon points="110,60 125,70 125,90 110,100 95,90 95,70" fill="url(#businessGradient)" opacity="0.7"/>
+                        </g>
+                    </svg>
                 </div>
                 <p class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-6">Business</p>
                 <h3 class="text-2xl font-bold mb-1 text-white">Corporate Web</h3>
@@ -201,9 +244,25 @@
                 <a href="https://wa.link/ngg6oo" target="_blank" class="block w-full text-center py-4 rounded-xl bg-blue-600 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-900/40">Mulai Sekarang</a>
             </div>
 
+            <!-- Specialized Plan -->
             <div class="p-10 rounded-[2.5rem] border border-slate-100 bg-white hover:shadow-2xl transition-all duration-500">
                 <div class="img-container mb-8">
-                    <img src="Rimberio.jpg" alt="Custom Project">
+                    <svg width="150" height="150" viewBox="0 0 150 150">
+                        <defs>
+                            <linearGradient id="specializedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#FF6B6B;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#C92A2A;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <line x1="75" y1="30" x2="50" y2="75" stroke="url(#specializedGradient)" stroke-width="2" opacity="0.6"/>
+                        <line x1="75" y1="30" x2="100" y2="75" stroke="url(#specializedGradient)" stroke-width="2" opacity="0.6"/>
+                        <line x1="50" y1="120" x2="100" y2="120" stroke="url(#specializedGradient)" stroke-width="2" opacity="0.6"/>
+                        <circle cx="75" cy="30" r="10" fill="url(#specializedGradient)" style="animation: float 3s ease-in-out 0s infinite;"/>
+                        <circle cx="50" cy="75" r="10" fill="url(#specializedGradient)" style="animation: float 3s ease-in-out 0.5s infinite;"/>
+                        <circle cx="100" cy="75" r="10" fill="url(#specializedGradient)" style="animation: float 3s ease-in-out 1s infinite;"/>
+                        <circle cx="50" cy="120" r="10" fill="url(#specializedGradient)" style="animation: float 3s ease-in-out 1.5s infinite;"/>
+                        <circle cx="100" cy="120" r="10" fill="url(#specializedGradient)" style="animation: float 3s ease-in-out 2s infinite;"/>
+                    </svg>
                 </div>
                 <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Specialized</p>
                 <h3 class="text-2xl font-bold mb-1">Custom Project</h3>
@@ -313,12 +372,4 @@
                     } catch (err) {
                         Swal.fire('Error', 'Periksa koneksi internet.', 'error');
                     } finally {
-                        btn.disabled = false;
-                        btn.innerText = "Kirim Permintaan";
-                    }
-                });
-            });
-        }
-    </script>
-</body>
-</html>
+                        btn.disabled = false
