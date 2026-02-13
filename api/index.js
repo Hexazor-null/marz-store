@@ -22,11 +22,10 @@ app.use(cors({
 
 app.use(express.json({ limit: '10kb' }));
 
-// --- PERUBAHAN DI SINI ---
-// Letakkan mongoSanitize SEBELUM hpp untuk menghindari error Read-Only di Vercel
-app.use(mongoSanitize()); 
+// FIX UNTUK ERROR: TypeError: Cannot set property query
+// mongoSanitize diletakkan SEBELUM hpp dan segera setelah express.json
+app.use(mongoSanitize());
 app.use(hpp());
-// -------------------------
 
 // 2. RATE LIMITING (CRITICAL!)
 const apiLimiter = rateLimit({
@@ -128,19 +127,23 @@ const verifyRecaptcha = async (token, remoteIp) => {
 };
 
 const sanitizeAndValidate = (email, whatsapp, pesan) => {
+  // Sanitasi XSS
   const cleanEmail = xss(email?.toString() || '').trim();
   const cleanWhatsapp = xss(whatsapp?.toString() || '').trim();
   const cleanPesan = xss(pesan?.toString() || '').trim();
   
+  // Validasi Email
   if (!validator.isEmail(cleanEmail)) {
     throw new Error('Format email tidak valid');
   }
   
+  // Validasi WhatsApp (international format)
   const phoneRegex = /^\+?[1-9]\d{7,14}$/;
   if (!phoneRegex.test(cleanWhatsapp)) {
     throw new Error('Format nomor WhatsApp tidak valid');
   }
   
+  // Validasi Panjang
   if (cleanPesan.length < 10 || cleanPesan.length > 1000) {
     throw new Error('Pesan harus 10-1000 karakter');
   }
@@ -157,10 +160,12 @@ app.get('/api/index', (req, res) => {
   });
 });
 
+// POST dengan FULL PROTECTION
 app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
   try {
     const { email: rawEmail, whatsapp: rawWhatsapp, pesan: rawPesan, captchaToken } = req.body;
     
+    // A. VERIFIKASI RECAPTCHA
     const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || 
                      req.socket.remoteAddress || 
                      req.ip;
@@ -175,6 +180,7 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
       });
     }
     
+    // B. VALIDASI & SANITASI
     let validated;
     try {
       validated = sanitizeAndValidate(rawEmail, rawWhatsapp, rawPesan);
@@ -185,11 +191,13 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
       });
     }
     
+    // C. CONNECT DB
     await connectDB();
     
+    // D. CHECK DUPLICATE (prevent spam dari user yang sama)
     const recentInquiry = await Inquiry.findOne({
       email: validated.email,
-      createdAt: { $gte: new Date(Date.now() - 60 * 60 * 1000) } 
+      createdAt: { $gte: new Date(Date.now() - 60 * 60 * 1000) } // 1 jam terakhir
     });
     
     if (recentInquiry) {
@@ -199,12 +207,14 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
       });
     }
     
+    // E. SIMPAN KE DATABASE
     const newLead = new Inquiry({ 
       ...validated,
       ipAddress: clientIp
     });
     await newLead.save();
     
+    // F. KIRIM EMAIL (dengan error handling)
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -246,6 +256,7 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
   }
 });
 
+// 7. ERROR HANDLER
 app.use((err, req, res, next) => {
   console.error('Unhandled Error:', err);
   res.status(500).json({ 
