@@ -21,10 +21,12 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '10kb' }));
-app.use(hpp());
 
-// Anti NoSQL Injection
-app.use(mongoSanitize());
+// --- PERUBAHAN DI SINI ---
+// Letakkan mongoSanitize SEBELUM hpp untuk menghindari error Read-Only di Vercel
+app.use(mongoSanitize()); 
+app.use(hpp());
+// -------------------------
 
 // 2. RATE LIMITING (CRITICAL!)
 const apiLimiter = rateLimit({
@@ -76,22 +78,21 @@ const InquirySchema = new mongoose.Schema({
   pesan: { 
     type: String, 
     required: true,
-    maxlength: 1000, // Batasi panjang
+    maxlength: 1000, 
     trim: true
   },
-  ipAddress: { // Track IP untuk forensik
+  ipAddress: { 
     type: String,
     required: false
   },
   createdAt: { 
     type: Date, 
     default: Date.now,
-    expires: 2592000 // Auto-delete setelah 30 hari (OTOMATIS MEMBUAT INDEX)
+    expires: 2592000 
   }
 });
 
 // Index untuk performa
-// InquirySchema.index({ createdAt: 1 }); // DIHAPUS karena duplikat dengan 'expires' di atas
 InquirySchema.index({ email: 1 });
 
 const Inquiry = mongoose.models.Inquiry || mongoose.model('Inquiry', InquirySchema);
@@ -100,7 +101,7 @@ const Inquiry = mongoose.models.Inquiry || mongoose.model('Inquiry', InquirySche
 const verifyRecaptcha = async (token, remoteIp) => {
   if (!token) return { success: false, error: 'Token missing' };
   
-  const secretKey = process.env.RECAPTCHA_SECRET_KEY; // DARI ENV!
+  const secretKey = process.env.RECAPTCHA_SECRET_KEY; 
   
   if (!secretKey) {
     console.error('RECAPTCHA_SECRET_KEY not configured!');
@@ -127,23 +128,19 @@ const verifyRecaptcha = async (token, remoteIp) => {
 };
 
 const sanitizeAndValidate = (email, whatsapp, pesan) => {
-  // Sanitasi XSS
   const cleanEmail = xss(email?.toString() || '').trim();
   const cleanWhatsapp = xss(whatsapp?.toString() || '').trim();
   const cleanPesan = xss(pesan?.toString() || '').trim();
   
-  // Validasi Email
   if (!validator.isEmail(cleanEmail)) {
     throw new Error('Format email tidak valid');
   }
   
-  // Validasi WhatsApp (international format)
   const phoneRegex = /^\+?[1-9]\d{7,14}$/;
   if (!phoneRegex.test(cleanWhatsapp)) {
     throw new Error('Format nomor WhatsApp tidak valid');
   }
   
-  // Validasi Panjang
   if (cleanPesan.length < 10 || cleanPesan.length > 1000) {
     throw new Error('Pesan harus 10-1000 karakter');
   }
@@ -160,12 +157,10 @@ app.get('/api/index', (req, res) => {
   });
 });
 
-// POST dengan FULL PROTECTION
 app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
   try {
     const { email: rawEmail, whatsapp: rawWhatsapp, pesan: rawPesan, captchaToken } = req.body;
     
-    // A. VERIFIKASI RECAPTCHA
     const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || 
                      req.socket.remoteAddress || 
                      req.ip;
@@ -180,7 +175,6 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
       });
     }
     
-    // B. VALIDASI & SANITASI
     let validated;
     try {
       validated = sanitizeAndValidate(rawEmail, rawWhatsapp, rawPesan);
@@ -191,13 +185,11 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
       });
     }
     
-    // C. CONNECT DB
     await connectDB();
     
-    // D. CHECK DUPLICATE (prevent spam dari user yang sama)
     const recentInquiry = await Inquiry.findOne({
       email: validated.email,
-      createdAt: { $gte: new Date(Date.now() - 60 * 60 * 1000) } // 1 jam terakhir
+      createdAt: { $gte: new Date(Date.now() - 60 * 60 * 1000) } 
     });
     
     if (recentInquiry) {
@@ -207,14 +199,12 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
       });
     }
     
-    // E. SIMPAN KE DATABASE
     const newLead = new Inquiry({ 
       ...validated,
       ipAddress: clientIp
     });
     await newLead.save();
     
-    // F. KIRIM EMAIL (dengan error handling)
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -240,7 +230,6 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
       });
     } catch (emailError) {
       console.error('Email Error:', emailError.message);
-      // Jangan gagalkan request, tapi log error
     }
     
     res.status(200).json({ 
@@ -250,8 +239,6 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
     
   } catch (err) {
     console.error("Backend Error:", err);
-    
-    // JANGAN expose detail error ke client!
     res.status(500).json({ 
       status: 'error', 
       message: 'Terjadi kesalahan sistem. Silakan coba lagi.' 
@@ -259,7 +246,6 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
   }
 });
 
-// 7. ERROR HANDLER
 app.use((err, req, res, next) => {
   console.error('Unhandled Error:', err);
   res.status(500).json({ 
