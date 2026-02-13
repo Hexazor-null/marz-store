@@ -34,19 +34,46 @@ app.use(mongoSanitize({
 
 app.use(hpp());
 
-// 2. RATE LIMITING (CRITICAL!)
+// 2. ✅ RATE LIMITING - UDAH DIBENERIN (LEBIH LONGGAR)
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 menit
-  max: 5, // 5 request per IP
-  message: 'Terlalu banyak request, coba lagi nanti',
+  windowMs: 10 * 60 * 1000, // 10 menit
+  max: 15, // 15 request per 10 menit
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limit untuk GET request (health check)
+    if (req.method === 'GET') return true;
+    
+    // Optional: Skip untuk IP trusted
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
+    const trustedIps = process.env.TRUSTED_IPS?.split(',') || [];
+    return trustedIps.includes(clientIp);
+  },
+  handler: (req, res) => {
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
+    console.warn(`🚫 API Rate limit exceeded: ${clientIp}`);
+    
+    res.status(429).json({
+      status: 'error',
+      message: 'Terlalu banyak request dari IP Anda. Silakan tunggu 10 menit.'
+    });
+  }
 });
 
 const emailLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 jam
-  max: 3, // 3 email per IP per jam
-  skipSuccessfulRequests: false
+  max: 5, // 5 email per jam (naik dari 3)
+  skipSuccessfulRequests: false,
+  handler: (req, res) => {
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
+    console.warn(`📧 Email rate limit exceeded: ${clientIp}`);
+    
+    res.status(429).json({
+      status: 'error',
+      message: 'Anda sudah mengirim 5 pesan dalam 1 jam. Hubungi WhatsApp kami untuk respon cepat.',
+      whatsapp: process.env.WHATSAPP_NUMBER || '+628xxxx'
+    });
+  }
 });
 
 // 3. DB CONNECTION dengan error handling
@@ -62,7 +89,7 @@ const connectDB = async () => {
     console.log("✅ MongoDB Connected");
   } catch (err) {
     console.error("❌ DB Error:", err.message);
-    throw err; // Jangan biarkan app jalan tanpa DB
+    throw err;
   }
 };
 
@@ -100,18 +127,19 @@ const InquirySchema = new mongoose.Schema({
 
 // Index untuk performa
 InquirySchema.index({ email: 1 });
+InquirySchema.index({ createdAt: 1 });
 
 const Inquiry = mongoose.models.Inquiry || mongoose.model('Inquiry', InquirySchema);
 
 // 5. HELPER FUNCTIONS
 const verifyRecaptcha = async (token, remoteIp) => {
-  if (!token) return { success: false, error: 'Token missing' };
+  if (!token) return { success: false, error: 'Token missing', score: 0 };
   
   const secretKey = process.env.RECAPTCHA_SECRET_KEY; 
   
   if (!secretKey) {
     console.error('❌ RECAPTCHA_SECRET_KEY not configured!');
-    return { success: false, error: 'Server misconfiguration' };
+    return { success: false, error: 'Server misconfiguration', score: 0 };
   }
 
   try {
@@ -127,11 +155,11 @@ const verifyRecaptcha = async (token, remoteIp) => {
     }
     
     const result = await response.json();
-    console.log(`🔐 reCAPTCHA Score: ${result.score}`);
+    console.log(`🔐 reCAPTCHA Score: ${result.score || 'N/A'}`);
     return result;
   } catch (error) {
     console.error('❌ reCAPTCHA Error:', error);
-    return { success: false, error: 'Verification failed' };
+    return { success: false, error: 'Verification failed', score: 0 };
   }
 };
 
@@ -149,7 +177,7 @@ const sanitizeAndValidate = (email, whatsapp, pesan) => {
   // Validasi WhatsApp (international format)
   const phoneRegex = /^\+?[1-9]\d{7,14}$/;
   if (!phoneRegex.test(cleanWhatsapp)) {
-    throw new Error('Format nomor WhatsApp tidak valid (gunakan format: +628xxx)');
+    throw new Error('Format nomor WhatsApp tidak valid (contoh: +628123456789)');
   }
   
   // Validasi Panjang
@@ -175,49 +203,55 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
   try {
     const { email: rawEmail, whatsapp: rawWhatsapp, pesan: rawPesan, captchaToken } = req.body;
     
-    // A. VERIFIKASI RECAPTCHA
+    // A. GET CLIENT IP
     const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || 
+                     req.headers['x-real-ip'] ||
                      req.socket.remoteAddress || 
                      req.ip;
     
+    console.log(`📨 New request from IP: ${clientIp}`);
+    
+    // B. VERIFIKASI RECAPTCHA
     const recaptchaResult = await verifyRecaptcha(captchaToken, clientIp);
     
-    if (!recaptchaResult.success || recaptchaResult.score < 0.5) {
-      console.warn(`🤖 Bot detected from IP: ${clientIp}, Score: ${recaptchaResult.score}`);
+    if (!recaptchaResult.success || (recaptchaResult.score && recaptchaResult.score < 0.5)) {
+      console.warn(`🤖 Bot detected from IP: ${clientIp}, Score: ${recaptchaResult.score || 'N/A'}`);
       return res.status(403).json({ 
         status: 'error', 
-        message: 'Verifikasi keamanan gagal. Silakan refresh dan coba lagi.' 
+        message: 'Verifikasi keamanan gagal. Silakan refresh halaman dan coba lagi.' 
       });
     }
     
-    // B. VALIDASI & SANITASI
+    // C. VALIDASI & SANITASI
     let validated;
     try {
       validated = sanitizeAndValidate(rawEmail, rawWhatsapp, rawPesan);
     } catch (validationError) {
+      console.warn(`⚠️ Validation failed: ${validationError.message}`);
       return res.status(400).json({ 
         status: 'error', 
         message: validationError.message 
       });
     }
     
-    // C. CONNECT DB
+    // D. CONNECT DB
     await connectDB();
     
-    // D. CHECK DUPLICATE (prevent spam dari user yang sama)
+    // E. CHECK DUPLICATE (prevent spam dari user yang sama)
     const recentInquiry = await Inquiry.findOne({
       email: validated.email,
       createdAt: { $gte: new Date(Date.now() - 60 * 60 * 1000) } // 1 jam terakhir
     });
     
     if (recentInquiry) {
+      console.warn(`🔄 Duplicate inquiry from: ${validated.email}`);
       return res.status(429).json({
         status: 'error',
-        message: 'Anda sudah mengirim inquiry. Mohon tunggu 1 jam.'
+        message: 'Anda sudah mengirim inquiry dalam 1 jam terakhir. Mohon tunggu sebentar.'
       });
     }
     
-    // E. SIMPAN KE DATABASE
+    // F. SIMPAN KE DATABASE
     const newLead = new Inquiry({ 
       ...validated,
       ipAddress: clientIp
@@ -225,7 +259,7 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
     await newLead.save();
     console.log(`✅ New inquiry saved: ${validated.email}`);
     
-    // F. KIRIM EMAIL (dengan error handling)
+    // G. KIRIM EMAIL (dengan error handling - tidak blocking response)
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -240,54 +274,68 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
         to: process.env.EMAIL_USER,
         subject: `🔔 KONSULTASI BARU: ${validated.email}`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2563eb;">📩 Detail Inquiry Baru</h2>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr style="background: #f3f4f6;">
-                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Email:</strong></td>
-                <td style="padding: 12px; border: 1px solid #e5e7eb;">${validated.email}</td>
-              </tr>
-              <tr>
-                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>WhatsApp:</strong></td>
-                <td style="padding: 12px; border: 1px solid #e5e7eb;">${validated.whatsapp}</td>
-              </tr>
-              <tr style="background: #f3f4f6;">
-                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Pesan:</strong></td>
-                <td style="padding: 12px; border: 1px solid #e5e7eb;">${validated.pesan}</td>
-              </tr>
-              <tr>
-                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>IP Address:</strong></td>
-                <td style="padding: 12px; border: 1px solid #e5e7eb;">${clientIp}</td>
-              </tr>
-              <tr style="background: #f3f4f6;">
-                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Bot Score:</strong></td>
-                <td style="padding: 12px; border: 1px solid #e5e7eb;">${recaptchaResult.score}</td>
-              </tr>
-              <tr>
-                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Waktu:</strong></td>
-                <td style="padding: 12px; border: 1px solid #e5e7eb;">${new Date().toLocaleString('id-ID')}</td>
-              </tr>
-            </table>
-            <p style="margin-top: 20px; color: #6b7280;">Segera follow up lead ini! 🚀</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <h2 style="color: #2563eb; margin-top: 0;">📩 Detail Inquiry Baru</h2>
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr style="background: #f3f4f6;">
+                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold; width: 150px;">Email:</td>
+                  <td style="padding: 12px; border: 1px solid #e5e7eb;">${validated.email}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold;">WhatsApp:</td>
+                  <td style="padding: 12px; border: 1px solid #e5e7eb;">
+                    <a href="https://wa.me/${validated.whatsapp.replace(/[^0-9]/g, '')}" style="color: #2563eb; text-decoration: none;">
+                      ${validated.whatsapp}
+                    </a>
+                  </td>
+                </tr>
+                <tr style="background: #f3f4f6;">
+                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold; vertical-align: top;">Pesan:</td>
+                  <td style="padding: 12px; border: 1px solid #e5e7eb;">${validated.pesan}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold;">IP Address:</td>
+                  <td style="padding: 12px; border: 1px solid #e5e7eb;">${clientIp}</td>
+                </tr>
+                <tr style="background: #f3f4f6;">
+                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold;">Bot Score:</td>
+                  <td style="padding: 12px; border: 1px solid #e5e7eb;">
+                    <span style="color: ${recaptchaResult.score >= 0.7 ? '#10b981' : recaptchaResult.score >= 0.5 ? '#f59e0b' : '#ef4444'}; font-weight: bold;">
+                      ${recaptchaResult.score || 'N/A'}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold;">Waktu:</td>
+                  <td style="padding: 12px; border: 1px solid #e5e7eb;">${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}</td>
+                </tr>
+              </table>
+              <div style="margin-top: 20px; padding: 15px; background-color: #dbeafe; border-left: 4px solid #2563eb; border-radius: 4px;">
+                <p style="margin: 0; color: #1e40af; font-weight: bold;">⚡ Action Required:</p>
+                <p style="margin: 5px 0 0 0; color: #1e3a8a;">Segera follow up lead ini dalam 1 jam untuk conversion rate maksimal!</p>
+              </div>
+            </div>
           </div>
         `
       });
       console.log(`📧 Email sent successfully to ${process.env.EMAIL_USER}`);
     } catch (emailError) {
       console.error('❌ Email Error:', emailError.message);
-      // Jangan block response meskipun email gagal
+      // TIDAK BLOCKING RESPONSE - Email gagal tapi data tetap tersimpan
     }
     
+    // H. RESPONSE SUCCESS
     res.status(200).json({ 
       status: 'success', 
-      message: 'Terima kasih! Kami akan segera menghubungi Anda.' 
+      message: 'Terima kasih! Pesan Anda sudah diterima. Tim kami akan segera menghubungi Anda.' 
     });
     
   } catch (err) {
     console.error("❌ Backend Error:", err);
     res.status(500).json({ 
       status: 'error', 
-      message: 'Terjadi kesalahan sistem. Silakan coba lagi.' 
+      message: 'Terjadi kesalahan sistem. Silakan coba lagi atau hubungi kami via WhatsApp.' 
     });
   }
 });
@@ -295,9 +343,12 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
 // 7. ERROR HANDLER
 app.use((err, req, res, next) => {
   console.error('❌ Unhandled Error:', err);
+  
+  // Jangan expose error detail ke user
   res.status(500).json({ 
     status: 'error', 
-    message: 'Internal server error' 
+    message: 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { details: err.message })
   });
 });
 
@@ -306,6 +357,22 @@ process.on('SIGTERM', async () => {
   console.log('⚠️ SIGTERM received, closing MongoDB connection...');
   await mongoose.connection.close();
   process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('⚠️ SIGINT received, closing MongoDB connection...');
+  await mongoose.connection.close();
+  process.exit(0);
+});
+
+// 9. HANDLE UNCAUGHT EXCEPTIONS
+process.on('uncaughtException', (err) => {
+  console.error('💥 Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 module.exports = app;
