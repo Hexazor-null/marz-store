@@ -22,9 +22,16 @@ app.use(cors({
 
 app.use(express.json({ limit: '10kb' }));
 
-// FIX UNTUK ERROR: TypeError: Cannot set property query
-// mongoSanitize diletakkan SEBELUM hpp dan segera setelah express.json
-app.use(mongoSanitize());
+// ✅ FIX UNTUK ERROR: TypeError: Cannot set property query
+// Konfigurasi khusus untuk serverless environment (Vercel/Lambda)
+app.use(mongoSanitize({
+  replaceWith: '_',
+  allowDots: true,
+  onSanitize: ({ req, key }) => {
+    console.warn(`⚠️ Sanitized dangerous key: ${key}`);
+  }
+}));
+
 app.use(hpp());
 
 // 2. RATE LIMITING (CRITICAL!)
@@ -52,9 +59,9 @@ const connectDB = async () => {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
-    console.log("MongoDB Connected");
+    console.log("✅ MongoDB Connected");
   } catch (err) {
-    console.error("DB Error:", err.message);
+    console.error("❌ DB Error:", err.message);
     throw err; // Jangan biarkan app jalan tanpa DB
   }
 };
@@ -87,7 +94,7 @@ const InquirySchema = new mongoose.Schema({
   createdAt: { 
     type: Date, 
     default: Date.now,
-    expires: 2592000 
+    expires: 2592000 // 30 hari auto-delete
   }
 });
 
@@ -103,7 +110,7 @@ const verifyRecaptcha = async (token, remoteIp) => {
   const secretKey = process.env.RECAPTCHA_SECRET_KEY; 
   
   if (!secretKey) {
-    console.error('RECAPTCHA_SECRET_KEY not configured!');
+    console.error('❌ RECAPTCHA_SECRET_KEY not configured!');
     return { success: false, error: 'Server misconfiguration' };
   }
 
@@ -119,9 +126,11 @@ const verifyRecaptcha = async (token, remoteIp) => {
       throw new Error('reCAPTCHA verification failed');
     }
     
-    return await response.json();
+    const result = await response.json();
+    console.log(`🔐 reCAPTCHA Score: ${result.score}`);
+    return result;
   } catch (error) {
-    console.error('reCAPTCHA Error:', error);
+    console.error('❌ reCAPTCHA Error:', error);
     return { success: false, error: 'Verification failed' };
   }
 };
@@ -140,7 +149,7 @@ const sanitizeAndValidate = (email, whatsapp, pesan) => {
   // Validasi WhatsApp (international format)
   const phoneRegex = /^\+?[1-9]\d{7,14}$/;
   if (!phoneRegex.test(cleanWhatsapp)) {
-    throw new Error('Format nomor WhatsApp tidak valid');
+    throw new Error('Format nomor WhatsApp tidak valid (gunakan format: +628xxx)');
   }
   
   // Validasi Panjang
@@ -156,7 +165,8 @@ app.get('/api/index', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
     message: 'Server Marz Store Running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -173,7 +183,7 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
     const recaptchaResult = await verifyRecaptcha(captchaToken, clientIp);
     
     if (!recaptchaResult.success || recaptchaResult.score < 0.5) {
-      console.warn(`Bot detected from IP: ${clientIp}, Score: ${recaptchaResult.score}`);
+      console.warn(`🤖 Bot detected from IP: ${clientIp}, Score: ${recaptchaResult.score}`);
       return res.status(403).json({ 
         status: 'error', 
         message: 'Verifikasi keamanan gagal. Silakan refresh dan coba lagi.' 
@@ -213,6 +223,7 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
       ipAddress: clientIp
     });
     await newLead.save();
+    console.log(`✅ New inquiry saved: ${validated.email}`);
     
     // F. KIRIM EMAIL (dengan error handling)
     try {
@@ -229,17 +240,42 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
         to: process.env.EMAIL_USER,
         subject: `🔔 KONSULTASI BARU: ${validated.email}`,
         html: `
-          <h2>Detail Inquiry Baru</h2>
-          <p><strong>Email:</strong> ${validated.email}</p>
-          <p><strong>WhatsApp:</strong> ${validated.whatsapp}</p>
-          <p><strong>Pesan:</strong> ${validated.pesan}</p>
-          <p><strong>IP Address:</strong> ${clientIp}</p>
-          <p><strong>Bot Score:</strong> ${recaptchaResult.score}</p>
-          <p><strong>Waktu:</strong> ${new Date().toLocaleString('id-ID')}</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">📩 Detail Inquiry Baru</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="background: #f3f4f6;">
+                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Email:</strong></td>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;">${validated.email}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>WhatsApp:</strong></td>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;">${validated.whatsapp}</td>
+              </tr>
+              <tr style="background: #f3f4f6;">
+                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Pesan:</strong></td>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;">${validated.pesan}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>IP Address:</strong></td>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;">${clientIp}</td>
+              </tr>
+              <tr style="background: #f3f4f6;">
+                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Bot Score:</strong></td>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;">${recaptchaResult.score}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Waktu:</strong></td>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;">${new Date().toLocaleString('id-ID')}</td>
+              </tr>
+            </table>
+            <p style="margin-top: 20px; color: #6b7280;">Segera follow up lead ini! 🚀</p>
+          </div>
         `
       });
+      console.log(`📧 Email sent successfully to ${process.env.EMAIL_USER}`);
     } catch (emailError) {
-      console.error('Email Error:', emailError.message);
+      console.error('❌ Email Error:', emailError.message);
+      // Jangan block response meskipun email gagal
     }
     
     res.status(200).json({ 
@@ -248,7 +284,7 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
     });
     
   } catch (err) {
-    console.error("Backend Error:", err);
+    console.error("❌ Backend Error:", err);
     res.status(500).json({ 
       status: 'error', 
       message: 'Terjadi kesalahan sistem. Silakan coba lagi.' 
@@ -258,11 +294,18 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
 
 // 7. ERROR HANDLER
 app.use((err, req, res, next) => {
-  console.error('Unhandled Error:', err);
+  console.error('❌ Unhandled Error:', err);
   res.status(500).json({ 
     status: 'error', 
     message: 'Internal server error' 
   });
+});
+
+// 8. GRACEFUL SHUTDOWN (untuk production)
+process.on('SIGTERM', async () => {
+  console.log('⚠️ SIGTERM received, closing MongoDB connection...');
+  await mongoose.connection.close();
+  process.exit(0);
 });
 
 module.exports = app;
