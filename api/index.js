@@ -86,12 +86,12 @@ const InquirySchema = new mongoose.Schema({
   createdAt: { 
     type: Date, 
     default: Date.now,
-    expires: 2592000 // Auto-delete setelah 30 hari
+    expires: 2592000 // Auto-delete setelah 30 hari (OTOMATIS MEMBUAT INDEX)
   }
 });
 
 // Index untuk performa
-InquirySchema.index({ createdAt: 1 });
+// InquirySchema.index({ createdAt: 1 }); // DIHAPUS karena duplikat dengan 'expires' di atas
 InquirySchema.index({ email: 1 });
 
 const Inquiry = mongoose.models.Inquiry || mongoose.model('Inquiry', InquirySchema);
