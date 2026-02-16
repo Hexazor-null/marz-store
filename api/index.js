@@ -12,7 +12,6 @@ const app = express();
 
 app.set('trust proxy', 1);
 
-// SECURITY MIDDLEWARE
 app.use(helmet());
 
 app.use(cors({ 
@@ -53,7 +52,6 @@ const mongoSanitize = (req, res, next) => {
 app.use(mongoSanitize);
 app.use(hpp());
 
-// RATE LIMITING
 const apiLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 15,
@@ -82,7 +80,6 @@ const emailLimiter = rateLimit({
   }
 });
 
-// DATABASE CONNECTION
 const connectDB = async () => {
   if (mongoose.connection.readyState >= 1) {
     console.log(`Already connected (state: ${mongoose.connection.readyState})`);
@@ -91,13 +88,11 @@ const connectDB = async () => {
   
   if (!process.env.MONGODB_URI) {
     console.error('CRITICAL ERROR: MONGODB_URI is NOT SET in environment variables!');
-    console.error('Available env vars:', Object.keys(process.env).filter(k => !k.includes('SECRET')));
     throw new Error('MONGODB_URI not configured');
   }
   
   try {
     console.log('Attempting to connect to MongoDB...');
-    console.log('URI exists:', !!process.env.MONGODB_URI);
     console.log('URI preview:', process.env.MONGODB_URI.substring(0, 40) + '...');
     
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -114,21 +109,6 @@ const connectDB = async () => {
     console.error("CRITICAL ERROR: MongoDB Connection FAILED!");
     console.error("Error name:", err.name);
     console.error("Error message:", err.message);
-    
-    if (err.name === 'MongoServerSelectionError') {
-      console.error('POSSIBLE CAUSES:');
-      console.error('  1. Wrong connection string format');
-      console.error('  2. IP not whitelisted in MongoDB Atlas (Network Access)');
-      console.error('  3. Firewall blocking connection');
-      console.error('  4. Cluster is paused or deleted');
-    } else if (err.name === 'MongoParseError') {
-      console.error('POSSIBLE CAUSE: Connection string format is INVALID');
-      console.error('  Check: mongodb+srv://username:password@cluster...');
-    } else if (err.message.includes('authentication') || err.message.includes('auth')) {
-      console.error('POSSIBLE CAUSE: Username or Password is WRONG');
-      console.error('  Go to: MongoDB Atlas > Database Access > Edit User');
-    }
-    
     throw err;
   }
 };
@@ -145,7 +125,6 @@ mongoose.connection.on('disconnected', () => {
   console.log('Mongoose event: DISCONNECTED from database');
 });
 
-// DATABASE MODEL
 const InquirySchema = new mongoose.Schema({
   email: { 
     type: String, 
@@ -181,8 +160,19 @@ InquirySchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
 
 const Inquiry = mongoose.models.Inquiry || mongoose.model('Inquiry', InquirySchema);
 
-// HELPER FUNCTIONS
 const verifyRecaptcha = async (token, remoteIp) => {
+  // BYPASS untuk testing dengan token khusus
+  if (token === 'test-bypass-token-12345') {
+    console.warn('TESTING MODE: reCAPTCHA bypassed with special test token');
+    return { success: true, score: 1.0 };
+  }
+  
+  // BYPASS via environment variable
+  if (process.env.BYPASS_RECAPTCHA === 'true') {
+    console.warn('BYPASS MODE: reCAPTCHA disabled via BYPASS_RECAPTCHA env var');
+    return { success: true, score: 1.0 };
+  }
+  
   if (!token) {
     console.warn('No reCAPTCHA token provided');
     return { success: false, error: 'Token missing', score: 0 };
@@ -249,7 +239,6 @@ const sanitizeAndValidate = (email, whatsapp, pesan) => {
   };
 };
 
-// ROUTES
 app.get('/api/index', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
@@ -281,6 +270,7 @@ app.get('/api/debug/status', async (req, res) => {
         hasEmailUser: !!process.env.EMAIL_USER,
         hasEmailPass: !!process.env.EMAIL_PASS,
         hasRecaptcha: !!process.env.RECAPTCHA_SECRET_KEY,
+        bypassRecaptcha: process.env.BYPASS_RECAPTCHA || 'false',
         nodeEnv: process.env.NODE_ENV || 'not set'
       }
     };
@@ -317,6 +307,7 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
     
     console.log(`[${new Date().toISOString()}] New request from IP: ${clientIp}`);
     console.log(`Request data: ${rawEmail}, ${rawWhatsapp}`);
+    console.log(`Captcha token: ${captchaToken}`);
     
     const recaptchaResult = await verifyRecaptcha(captchaToken, clientIp);
     
@@ -388,96 +379,46 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
         to: process.env.EMAIL_USER,
         subject: `KONSULTASI BARU: ${validated.email}`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
-            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <h2 style="color: #2563eb; margin-top: 0; border-bottom: 3px solid #2563eb; padding-bottom: 10px;">
-                Detail Inquiry Baru
-              </h2>
-              
-              <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                <tr style="background: #f3f4f6;">
-                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold; width: 150px;">Email:</td>
-                  <td style="padding: 12px; border: 1px solid #e5e7eb;">${validated.email}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold;">WhatsApp:</td>
-                  <td style="padding: 12px; border: 1px solid #e5e7eb;">
-                    <a href="https://wa.me/${validated.whatsapp.replace(/[^0-9]/g, '')}" 
-                       style="color: #2563eb; text-decoration: none; font-weight: bold;">
-                      ${validated.whatsapp}
-                    </a>
-                  </td>
-                </tr>
-                <tr style="background: #f3f4f6;">
-                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold; vertical-align: top;">Pesan:</td>
-                  <td style="padding: 12px; border: 1px solid #e5e7eb; white-space: pre-wrap;">${validated.pesan}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold;">IP Address:</td>
-                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-family: monospace;">${clientIp}</td>
-                </tr>
-                <tr style="background: #f3f4f6;">
-                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold;">Bot Score:</td>
-                  <td style="padding: 12px; border: 1px solid #e5e7eb;">
-                    <span style="
-                      color: ${recaptchaResult.score >= 0.7 ? '#10b981' : recaptchaResult.score >= 0.5 ? '#f59e0b' : '#ef4444'}; 
-                      font-weight: bold;
-                      padding: 4px 8px;
-                      border-radius: 4px;
-                      background: ${recaptchaResult.score >= 0.7 ? '#d1fae5' : recaptchaResult.score >= 0.5 ? '#fef3c7' : '#fee2e2'};
-                    ">
-                      ${recaptchaResult.score || 'N/A'}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: bold;">Waktu:</td>
-                  <td style="padding: 12px; border: 1px solid #e5e7eb;">
-                    ${new Date().toLocaleString('id-ID', { 
-                      timeZone: 'Asia/Jakarta',
-                      dateStyle: 'full',
-                      timeStyle: 'long'
-                    })}
-                  </td>
-                </tr>
-              </table>
-              
-              <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; text-align: center;">
-                <p style="margin: 0; color: white; font-size: 18px; font-weight: bold;">
-                  ACTION REQUIRED
-                </p>
-                <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 14px;">
-                  Segera follow up lead ini dalam 1 jam untuk conversion rate maksimal
-                </p>
-                <a href="https://wa.me/${validated.whatsapp.replace(/[^0-9]/g, '')}" 
-                   style="
-                     display: inline-block;
-                     margin-top: 15px;
-                     padding: 12px 24px;
-                     background-color: #25D366;
-                     color: white;
-                     text-decoration: none;
-                     border-radius: 6px;
-                     font-weight: bold;
-                   ">
-                  Chat via WhatsApp
-                </a>
-              </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px;">
-              <p>MARZ STORE - Automated Inquiry System</p>
-            </div>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2563eb;">Detail Inquiry Baru</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="background: #f3f4f6;">
+                <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">Email:</td>
+                <td style="padding: 12px; border: 1px solid #ddd;">${validated.email}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">WhatsApp:</td>
+                <td style="padding: 12px; border: 1px solid #ddd;">
+                  <a href="https://wa.me/${validated.whatsapp.replace(/[^0-9]/g, '')}">${validated.whatsapp}</a>
+                </td>
+              </tr>
+              <tr style="background: #f3f4f6;">
+                <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">Pesan:</td>
+                <td style="padding: 12px; border: 1px solid #ddd;">${validated.pesan}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">IP:</td>
+                <td style="padding: 12px; border: 1px solid #ddd;">${clientIp}</td>
+              </tr>
+              <tr style="background: #f3f4f6;">
+                <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">Score:</td>
+                <td style="padding: 12px; border: 1px solid #ddd;">${recaptchaResult.score || 'N/A'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">Waktu:</td>
+                <td style="padding: 12px; border: 1px solid #ddd;">${new Date().toLocaleString('id-ID')}</td>
+              </tr>
+            </table>
           </div>
         `
       });
-      console.log('Email sent successfully to', process.env.EMAIL_USER);
+      console.log('Email sent successfully');
     } catch (emailError) {
       console.error('Email sending failed:', emailError.message);
     }
     
     const duration = Date.now() - startTime;
-    console.log(`Request completed successfully in ${duration}ms for ${validated.email}`);
+    console.log(`Request completed successfully in ${duration}ms`);
     
     res.status(200).json({ 
       status: 'success', 
@@ -520,15 +461,6 @@ process.on('SIGINT', async () => {
   console.log('SIGINT signal received: closing MongoDB connection...');
   await mongoose.connection.close();
   process.exit(0);
-});
-
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 module.exports = app;
