@@ -14,29 +14,8 @@ app.set('trust proxy', 1);
 
 app.use(helmet());
 
-// CORS - TAMBAHKAN LOGGING untuk debug
 app.use(cors({ 
-  origin: (origin, callback) => {
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || ['https://yourdomain.com'];
-    
-    console.log('[CORS] Request from:', origin);
-    console.log('[CORS] Allowed origins:', allowedOrigins);
-    
-    // Izinkan jika tidak ada origin (Postman, mobile app)
-    if (!origin) {
-      console.log('[CORS] ✅ No origin - allowed');
-      return callback(null, true);
-    }
-    
-    // Cek whitelist
-    if (allowedOrigins.includes(origin)) {
-      console.log('[CORS] ✅ Origin allowed');
-      callback(null, true);
-    } else {
-      console.log('[CORS] ❌ Origin BLOCKED');
-      callback(null, true); // SEMENTARA tetap izinkan untuk testing
-    }
-  },
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['https://yourdomain.com'],
   credentials: true
 }));
 
@@ -182,11 +161,13 @@ InquirySchema.index({ createdAt: 1 }, { expireAfterSeconds: 2592000 });
 const Inquiry = mongoose.models.Inquiry || mongoose.model('Inquiry', InquirySchema);
 
 const verifyRecaptcha = async (token, remoteIp) => {
+  // BYPASS untuk testing dengan token khusus
   if (token === 'test-bypass-token-12345') {
     console.warn('TESTING MODE: reCAPTCHA bypassed with special test token');
     return { success: true, score: 1.0 };
   }
   
+  // BYPASS via environment variable
   if (process.env.BYPASS_RECAPTCHA === 'true') {
     console.warn('BYPASS MODE: reCAPTCHA disabled via BYPASS_RECAPTCHA env var');
     return { success: true, score: 1.0 };
@@ -259,7 +240,6 @@ const sanitizeAndValidate = (email, whatsapp, pesan) => {
 };
 
 app.get('/api/index', (req, res) => {
-  console.log('[GET /api/index] Health check request');
   res.status(200).json({ 
     status: 'ok', 
     message: 'Server Marz Store Running',
@@ -318,8 +298,6 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
   const startTime = Date.now();
   
   try {
-    console.log('[POST /api/index] New inquiry request received');
-    
     const { email: rawEmail, whatsapp: rawWhatsapp, pesan: rawPesan, captchaToken } = req.body;
     
     const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
