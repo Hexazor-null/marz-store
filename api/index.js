@@ -158,7 +158,8 @@ const sendEmailNotification = (validated, clientIp, recaptchaScore) => {
     to: process.env.EMAIL_USER,
     subject: `KONSULTASI BARU: ${validated.email}`,
     html
-  }).catch(err => console.error('[Email] Gagal kirim:', err.message));
+  }.then(info => console.log('[Email] Terkirim:', info.messageId))
+    .catch(err => console.error('[Email] Gagal - code:', err.code, '| msg:', err.message));
 };
 
 // -- Routes --
