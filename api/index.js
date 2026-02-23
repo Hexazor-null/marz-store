@@ -17,7 +17,7 @@ app.set('trust proxy', 1);
 app.use(helmet());
 
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['https://marz-web.web.id'],
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['https://marz-web.web.id','https://www.marz-web.web.id'],
   credentials: true
 }));
 
