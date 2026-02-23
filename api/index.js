@@ -119,8 +119,8 @@ const sanitizeAndValidate = (email, whatsapp, pesan) => {
   return { email: cleanEmail, whatsapp: cleanWa, pesan: cleanPesan };
 };
 
-// -- Kirim email notifikasi (fire-and-forget) --
-const sendEmailNotification = (validated, clientIp, recaptchaScore) => {
+// -- Kirim email (di-await agar tidak di-kill Vercel sebelum terkirim) --
+const sendEmailNotification = async (validated, clientIp, recaptchaScore) => {
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
       <h2 style="color:#2563eb">Detail Inquiry Baru</h2>
@@ -153,13 +153,18 @@ const sendEmailNotification = (validated, clientIp, recaptchaScore) => {
         </tr>
       </table>
     </div>`;
-  transporter.sendMail({
-    from: `"MARZ SYSTEM" <${process.env.EMAIL_USER}>`,
-    to: process.env.EMAIL_USER,
-    subject: `KONSULTASI BARU: ${validated.email}`,
-    html
-  }.then(info => console.log('[Email] Terkirim:', info.messageId))
-    .catch(err => console.error('[Email] Gagal - code:', err.code, '| msg:', err.message));
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"MARZ SYSTEM" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_USER,
+      subject: `KONSULTASI BARU: ${validated.email}`,
+      html
+    });
+    console.log('[Email] Terkirim:', info.messageId);
+  } catch (err) {
+    console.error('[Email] Gagal - code:', err.code, '| msg:', err.message);
+  }
 };
 
 // -- Routes --
@@ -206,10 +211,13 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
     if (recentInquiry)
       return res.status(429).json({ status: 'error', message: 'Anda sudah mengirim inquiry dalam 1 jam terakhir.' });
 
-    await Inquiry.create({ ...validated, ipAddress: clientIp });
-    sendEmailNotification(validated, clientIp, recaptchaResult.score);
+    // Simpan DB & kirim email paralel
+    await Promise.all([
+      Inquiry.create({ ...validated, ipAddress: clientIp }),
+      sendEmailNotification(validated, clientIp, recaptchaResult.score)
+    ]);
 
-    console.log(`[OK] Inquiry saved in ${Date.now() - startTime}ms`);
+    console.log(`[OK] Done in ${Date.now() - startTime}ms`);
     return res.status(200).json({ status: 'success', message: 'Terima kasih! Pesan Anda sudah diterima. Tim kami akan segera menghubungi Anda.' });
 
   } catch (err) {
