@@ -197,7 +197,7 @@ app.post('/api/index', apiLimiter, emailLimiter, async (req, res) => {
       throw err;
     }
 
-    if (!recaptchaResult.success) {
+    if (!recaptchaResult.success && recaptchaResult.error !== "timeout-or-duplicate") {
       console.warn(`[Security] reCAPTCHA gagal | score: ${recaptchaResult.score}`);
       return res.status(403).json({ status: 'error', message: 'Verifikasi keamanan gagal. Silakan refresh halaman dan coba lagi.' });
     }
